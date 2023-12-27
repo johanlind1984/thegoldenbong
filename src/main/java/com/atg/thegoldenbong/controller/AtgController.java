@@ -1,6 +1,7 @@
 package com.atg.thegoldenbong.controller;
 
 import com.atg.thegoldenbong.dto.TrenderDto;
+import com.atg.thegoldenbong.dto.TrenderMultisetDto;
 import com.atg.thegoldenbong.dto.atg.GameDto;
 import com.atg.thegoldenbong.service.GameService;
 import com.atg.thegoldenbong.service.TrenderService;
@@ -62,6 +63,13 @@ public class AtgController {
         log.log(Level.INFO, "getTrenderLastHours(" + timeStamp + ") called for gameId: " + gameId);
 
         return trenderService.getTrenderSummary(gameId, Optional.of(timeStamp));
+    }
+
+    @GetMapping("/trender/{gameId}/multiset")
+    public Map<String, List<TrenderMultisetDto>> getTrenderMultiset(@PathVariable final String gameId) {
+        log.log(Level.INFO, "getTrenderMultiset() called for gameId: " + gameId);
+        return trenderService.getTrenderMultiset(gameId);
+
     }
 
     @GetMapping("/trender/horses/{gameId}/{hours}/{minutes}")

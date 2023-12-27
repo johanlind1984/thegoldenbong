@@ -1,6 +1,7 @@
 package com.atg.thegoldenbong.service;
 
 import com.atg.thegoldenbong.dto.TrenderDto;
+import com.atg.thegoldenbong.dto.TrenderMultisetDto;
 import com.atg.thegoldenbong.dto.atg.GameDto;
 import com.atg.thegoldenbong.entity.Trender;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,8 @@ public interface TrenderService {
     void saveDtoToDomain(final GameDto gameDto);
 
     Map<String, List<TrenderDto>> getTrenderSummary(String gameId, Optional<Date> afterDate);
+
+    Map<String, List<TrenderMultisetDto>> getTrenderMultiset(String gameId);
 
     void deleteTrendsBeforeDate(final Date date);
 

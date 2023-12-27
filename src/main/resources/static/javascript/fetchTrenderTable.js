@@ -54,3 +54,49 @@ function fetchData() {
             console.error('Error:', error);
         });
 }
+
+function fetchMultisetData() {
+    const gameIdElement = document.getElementById("selectGame");
+    const gameId = gameIdElement.value;
+
+    if (gameId === null) {
+        return false;
+    }
+
+    let dataTable = new DataTable('#trenderMultiTable');
+    dataTable.rows().remove();
+    dataTable.page.len(100);
+
+    fetch('trender/' + gameId + '/multiset')
+        .then(response => response.json())
+        .then(data => {
+            // Iterate over the keys of the map
+            for (let key in data) {
+                if (data.hasOwnProperty(key)) {
+                    // Get the list of values for the current key
+                    let values = data[key];
+
+                    // Iterate over each entry in the list of values
+                    for (let i = 0; i < values.length; i++) {
+                        let entry = values[i];
+                        const vDist60 = entry.vdistribution60;
+                        const vDist30 = entry.vdistribution30;
+                        const vDist15 = entry.vdistribution15;
+
+                        dataTable.row.add([
+                            key,
+                            entry.horseId,
+                            '<a href=/horse.html?id=' + entry.horseId + ' target="_blank">' + entry.horseName + '</a>',
+                            vDist60,
+                            vDist30,
+                            vDist15,
+                            entry.horseNumber
+                        ]).draw(true);
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
