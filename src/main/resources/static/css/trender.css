@@ -120,3 +120,32 @@ button {
     background-color: #2E2E2E; /* Set the background color to blue */
     cursor: pointer; /* Add a cursor pointer on hover to indicate interactivity */
 }
+
+/* Style the tab container */
+div.tab {
+    overflow: hidden;
+}
+
+.tab button.tablinks {
+    background-color: transparent !important;
+    color: black;
+    float: left; /* Position buttons side by side */
+    border-color: black;
+    border-radius: 0px;
+    outline: none; /* Remove outline */
+    cursor: pointer; /* Add pointer on hover */
+    padding: 10px 15px; /* Add some padding */
+    transition: 0.3s; /* Add transition for hover effects */
+    font-size: 16px; /* Set font size */
+    margin: 10px;
+}
+
+/* Change background color of tablinks on hover */
+div.tab button.tablinks:hover {
+    background-color: #ddd; /* Light grey background on hover */
+}
+
+/* Create an active/current tablink class */
+div.tab button.tablinks.active {
+    background-color: darkgray; /* Different background color for the active tab */
+}

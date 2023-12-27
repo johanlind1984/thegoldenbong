@@ -9,22 +9,25 @@
     <script src="javascript/fetchTrenderTable.js"></script>
     <script src="javascript/graph.js"></script>
     <script src="javascript/game.js"></script>
+    <script src="javascript/tabs.js"></script>
+
     <script>
         window.onload = function () {
             getGames();
         };
 
-         function reloadData() {
-/*            const data = downladData();
+        function reloadData() {
+            /*            const data = downladData();
 
-            data.then(trend => {
-                console.log(trend)
-                fetchData(trend);
-                loadchart(trend);
-            })*/
-             fetchData();
-             // loadchart();
-             // loadChartHorses();
+                        data.then(trend => {
+                            console.log(trend)
+                            fetchData(trend);
+                            loadchart(trend);
+                        })*/
+            fetchData();
+            fetchMultisetData();
+            // loadchart();
+            // loadChartHorses();
         }
     </script>
 </head>
@@ -53,6 +56,7 @@
             in
             percent. 1 = no change.
         </p>
+
         <div id="gameLinks">
             <form>
                 <select id="selectGame">
@@ -60,7 +64,7 @@
                 <select id="selectHours">
                     <option value="0" selected="selected">Last 0 hour</option>
                     <option value="1">Last 1 hour</option>
-                    <option value="2" >Last 2 hours</option>
+                    <option value="2">Last 2 hours</option>
                     <option value="3">Last 3 hours</option>
                     <option value="4">Last 4 hours</option>
                     <option value="5">Last 5 hours</option>
@@ -103,22 +107,49 @@
 
         </div>
 
-        <table id="trenderTable" class="display">
-            <thead style="width: 100%">
-            <tr>
-                <th>Race</th>
-                <th>Horse Id</th>
-                <th>Horse Name</th>
-                <th>VDistribution %</th>
-                <th>VDistribution</th>
-                <th>VOdds %</th>
-                <th>VOdds</th>
-                <th>Horse Number</th>
-            </tr>
-            </thead>
-            <tbody id="output">
-            </tbody>
-        </table>
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'custom')">Custom time</button>
+            <button class="tablinks" onclick="openTab(event, 'multi')">Multitime</button>
+        </div>
+
+        <div id="custom" class="tabcontent">
+
+            <table id="trenderTable" class="display">
+                <thead style="width: 100%">
+                <tr>
+                    <th>Race</th>
+                    <th>Horse Id</th>
+                    <th>Horse Name</th>
+                    <th>VDistribution %</th>
+                    <th>VDistribution</th>
+                    <th>VOdds %</th>
+                    <th>VOdds</th>
+                    <th>Horse Number</th>
+                </tr>
+                </thead>
+                <tbody id="output">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="multi" class="tabcontent">
+
+            <table id="trenderMultiTable" class="display">
+                <thead style="width: 100%">
+                <tr>
+                    <th>Race</th>
+                    <th>Horse Id</th>
+                    <th>Horse Name</th>
+                    <th>VDistribution 60</th>
+                    <th>VDistribution 30</th>
+                    <th>VDistribution 15</th>
+                    <th>Horse Number</th>
+                </tr>
+                </thead>
+                <tbody id="multioutput">
+                </tbody>
+            </table>
+        </div>
     </div>
     <div id="graphContainer">
     </div>

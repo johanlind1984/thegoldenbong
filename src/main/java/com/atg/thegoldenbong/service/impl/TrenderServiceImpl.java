@@ -1,6 +1,7 @@
 package com.atg.thegoldenbong.service.impl;
 
 import com.atg.thegoldenbong.dto.TrenderDto;
+import com.atg.thegoldenbong.dto.TrenderMultisetDto;
 import com.atg.thegoldenbong.repository.TrenderRepository;
 import com.atg.thegoldenbong.dto.atg.GameDto;
 import com.atg.thegoldenbong.dto.atg.HorseDto;
@@ -16,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Log4j2
 @Service
@@ -102,6 +104,59 @@ public class TrenderServiceImpl implements TrenderService {
             }
 
             trenderDtos.get(raceId).add(new TrenderDto(horseId, horseName, horseNumber, vOdds, vDistribution, vOddsPercentage, vDistributionPercentage, timeStamp));
+
+        });
+
+        return trenderDtos;
+    }
+
+    @Override
+    public Map<String, List<TrenderMultisetDto>> getTrenderMultiset(String gameId) {
+        final List<Trender> trenderList = trenderRepository.findByGameId(gameId);
+
+        Map<String, List<TrenderMultisetDto>> trenderDtos = new HashMap<>();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR_OF_DAY, -1);
+        final Date oneHourAgo = calendar.getTime();
+        calendar.add(Calendar.MINUTE, 30);
+        final Date thirtyMinutesAgo = calendar.getTime();
+        calendar.add(Calendar.MINUTE, 15);
+        final Date fifteenMinutesAgo = calendar.getTime();
+
+        Set<Integer> horseIds = trenderList.stream().map(Trender::getHorseId).collect(Collectors.toSet());
+
+        horseIds.forEach(horseId -> {
+            List<Trender> orderedTrender = new ArrayList<>();
+            orderedTrender.addAll(trenderRepository.findByGameIdAndAndHorseIdAndTimeStampIsAfterOrderByTimeStampAsc(gameId, horseId, oneHourAgo));
+
+            final int lastEntry = orderedTrender.size() - 1;
+            final int sixtyMinEntry = 0;
+            final int thirtyMinEntry = IntStream.range(0, orderedTrender.size())
+                    .filter(i -> orderedTrender.get(i).getTimeStamp().after(thirtyMinutesAgo))
+                    .findFirst()
+                    .orElse(-1);
+
+            final int fifteenMinEntry = IntStream.range(0, orderedTrender.size())
+                    .filter(i -> orderedTrender.get(i).getTimeStamp().after(fifteenMinutesAgo))
+                    .findFirst()
+                    .orElse(-1);
+
+
+            final String raceId = orderedTrender.get(0).getRaceId();
+            final String horseName = orderedTrender.get(0).getHorseName();
+            final int horseNumber = orderedTrender.get(0).getHorseNumber();
+            final long vDistribution60 = orderedTrender.get(lastEntry).getVDistribution() - orderedTrender.get(sixtyMinEntry).getVDistribution();
+            final long vDistribution30 = orderedTrender.get(lastEntry).getVDistribution() - orderedTrender.get(thirtyMinEntry).getVDistribution();
+            final long vDistribution15 = orderedTrender.get(lastEntry).getVDistribution() - orderedTrender.get(fifteenMinEntry).getVDistribution();
+
+            final String timeStamp = LocalDate.now().toString();
+
+            if (!trenderDtos.containsKey(raceId)) {
+                trenderDtos.put(raceId, new ArrayList<>());
+            }
+
+            trenderDtos.get(raceId).add(new TrenderMultisetDto(horseId, horseName, horseNumber, vDistribution60, vDistribution30, vDistribution15, timeStamp));
 
         });
 
