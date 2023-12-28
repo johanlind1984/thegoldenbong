@@ -81,7 +81,6 @@ public class TrendDataFetchBatchJob {
 
 
         if (startTime.before(now)) {
-            log.info("saving trendResults for: " + game.getId());
             for (final RacesDto racesDto : game.getRaces()) {
                 if (trenderResultService.findByGameAndRaceId(game.getId(), racesDto.getId()).isEmpty()) {
                     log.info("saving trendResults for race: " + racesDto.getId() + " and game: " + game.getId());
@@ -92,7 +91,7 @@ public class TrendDataFetchBatchJob {
         }
     }
 
-/*    @Transactional
+    @Transactional
     @Scheduled(fixedRate = 120000)
     public void removeOldTrends() {
         LocalDateTime fourHoursAgo = LocalDateTime.now().minusHours(4);
@@ -100,7 +99,7 @@ public class TrendDataFetchBatchJob {
 
         log.log(Level.INFO, "Removing old entries before date: " + date);
         trenderService.deleteTrendsBeforeDate(date);
-    }*/
+    }
 
     public GameDto getGame(final String id)  {
         final String uri = BASE_URI + "games/" + id;

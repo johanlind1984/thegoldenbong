@@ -46,14 +46,20 @@ public class TrendResult {
     @Column(name = "vodds15")
     private Long vOdds15;
 
-    @Column(name = "vdistribution15")
-    private Long distribution15;
+    @Column(name = "vodds0")
+    private Long vOdds0;
+
+    @Column(name = "vdistribution60")
+    private Long distribution60;
 
     @Column(name = "vdistribution30")
     private Long distribution30;
 
-    @Column(name = "vdistribution60")
-    private Long distribution60;
+    @Column(name = "vdistribution15")
+    private Long distribution15;
+
+    @Column(name = "vdistribution0")
+    private Long distribution0;
 
     @Column(name = "placement")
     private Integer placement;

@@ -46,68 +46,84 @@ public class TrendResultServiceImpl implements TrendResultService {
 
     @Override
     public void saveGameTrendResults(final String gameId, String raceId, Date startTime) {
-        List<Integer> horseIdList = trenderRepository.findDistinctHorseIdByGameIdOrderByTimeStampAsc(gameId);
+        List<Integer> horseIdList = trenderRepository.findDistinctHorseIdByGameIdAAndRaceIdOrderByTimeStampAsc(gameId, raceId);
 
         horseIdList.forEach(horse -> {
             TrendResult trendResult = new TrendResult();
             trendResult.setGameId(gameId);
             trendResult.setRaceId(raceId);
             trendResult.setHorseId(horse);
-            saveTrendResultForDate(raceId, gameId, horse, startTime);
+            saveTrendResultForDate(gameId, raceId, horse, startTime, trendResult);
 
             });
 
     }
 
-    private void saveTrendResultForDate(String raceId, String gameId, Integer horseId, Date startTime) {
+    private void saveTrendResultForDate(String gameId, String raceId, Integer horseId, Date startTime, TrendResult trendResult) {
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(startTime);
         calendar.add(Calendar.HOUR_OF_DAY, -1);
-        final Date oneHourAgo = calendar.getTime();
+        final Date sixtyMinutesBeforeStart = calendar.getTime();
         calendar.add(Calendar.MINUTE, 30);
-        final Date thirtyMinutesAgo = calendar.getTime();
+        final Date thirtyMinutesBeforeStart = calendar.getTime();
         calendar.add(Calendar.MINUTE, 15);
-        final Date fifteenMinutesAgo = calendar.getTime();
+        final Date fifteenMinutesBeforeStart = calendar.getTime();
 
-        List<Trender> trenderList = trenderRepository.findByRaceIdAndHorseIdAndTimeStampBetweenOrderByTimeStampDesc(raceId, horseId, startTime, oneHourAgo);
+        List<Trender> trenderList = trenderRepository.findByGameIdAndRaceIdAndHorseIdAndTimeStampBetweenOrderByTimeStampDesc(gameId, raceId, horseId , sixtyMinutesBeforeStart, startTime);
 
-        TrendResult trendResult = new TrendResult();
+        if (trenderList.isEmpty()) {
+            log.info("could not find any trends for raceId: " + raceId + " and horse id: " + horseId + " between starttime: " + startTime + " and " + sixtyMinutesBeforeStart);
+            return;
+        } else if (Optional.ofNullable(trenderResultRepository.findByGameIdAndRaceIdAndAndHorseId(gameId, raceId, horseId)).isPresent()) {
+            return;
+        }
+
         // common data can be set by the first entry
         Trender firstTrend = trenderList.get(0);
         trendResult.setRaceNumber(firstTrend.getRaceNumber());
+        trendResult.setRaceId(firstTrend.getRaceId());
         trendResult.setHorseName(firstTrend.getHorseName());
         trendResult.setHorseNumber(firstTrend.getHorseNumber());
+        trendResult.setHorseId(firstTrend.getHorseId());
 
         final int lastEntry = trenderList.size() - 1;
-        final int sixtyMinEntry = 0;
+        final int sixtyMinEntry = trenderList.size() -1;
+
         final int thirtyMinEntry = IntStream.range(0, trenderList.size())
-                .filter(i -> trenderList.get(i).getTimeStamp().after(thirtyMinutesAgo))
+                .filter(i -> trenderList.get(i).getTimeStamp().before(thirtyMinutesBeforeStart))
                 .findFirst()
                 .orElse(-1);
 
         final int fifteenMinEntry = IntStream.range(0, trenderList.size())
-                .filter(i -> trenderList.get(i).getTimeStamp().after(fifteenMinutesAgo))
+                .filter(i -> trenderList.get(i).getTimeStamp().before(fifteenMinutesBeforeStart))
                 .findFirst()
                 .orElse(-1);
 
         // sixty minutes from start
-        final long vDistribution60 = trenderList.get(lastEntry).getVDistribution() - trenderList.get(sixtyMinEntry).getVDistribution();
-        final long vOdds60 = trenderList.get(lastEntry).getVOdds() - trenderList.get(sixtyMinEntry).getVOdds();
+        final long vDistribution60 = trenderList.get(sixtyMinEntry).getVDistribution();
+        final long vOdds60 = trenderList.get(sixtyMinEntry).getVOdds();
         trendResult.setDistribution60(vDistribution60);
         trendResult.setVOdds60(vOdds60);
 
         //thirty minutes from start
-        final long vDistribution30 = trenderList.get(lastEntry).getVDistribution() - trenderList.get(thirtyMinEntry).getVDistribution();
-        final long vOdds30 = trenderList.get(lastEntry).getVOdds() - trenderList.get(thirtyMinEntry).getVOdds();
+        final long vDistribution30 = trenderList.get(thirtyMinEntry).getVDistribution();
+        final long vOdds30 = trenderList.get(thirtyMinEntry).getVOdds();
         trendResult.setDistribution30(vDistribution30);
         trendResult.setVOdds30(vOdds30);
 
         //fifteen minutes from start
-        final long vDistribution15 = trenderList.get(lastEntry).getVDistribution() - trenderList.get(fifteenMinEntry).getVDistribution();
-        final long vOdds15 = trenderList.get(lastEntry).getVOdds() - trenderList.get(fifteenMinEntry).getVOdds();
+        final long vDistribution15 = trenderList.get(fifteenMinEntry).getVDistribution();
+        final long vOdds15 = trenderList.get(fifteenMinEntry).getVOdds();
         trendResult.setDistribution15(vDistribution15);
         trendResult.setVOdds15(vOdds15);
+
+        //at start
+        final long vDistribution0 = trenderList.get(0).getVDistribution();
+        final long vOdds0 = trenderList.get(0).getVOdds();
+        trendResult.setDistribution0(vDistribution0);
+        trendResult.setVOdds0(vOdds0);
+
         trenderResultRepository.save(trendResult);
     }
 
