@@ -24,6 +24,7 @@ function fetchData() {
     fetch('trender/' + gameId + '/' + lastHours + '/' + lastMinutes)
         .then(response => response.json())
         .then(data => {
+
             // Iterate over the keys of the map
             for (let key in data) {
                 if (data.hasOwnProperty(key)) {

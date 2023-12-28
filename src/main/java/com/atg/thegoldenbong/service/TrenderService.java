@@ -18,7 +18,7 @@ public interface TrenderService {
 
     Map<String, List<TrenderDto>> getTrenderSummary(String gameId, Optional<Date> afterDate);
 
-    Map<String, List<TrenderMultisetDto>> getTrenderMultiset(String gameId);
+    Map<String, List<TrenderMultisetDto>> getTrenderMultiset(String gameId, Optional<Date> startTime);
 
     void deleteTrendsBeforeDate(final Date date);
 

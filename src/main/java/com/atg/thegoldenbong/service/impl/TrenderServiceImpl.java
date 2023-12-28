@@ -6,6 +6,7 @@ import com.atg.thegoldenbong.repository.TrenderRepository;
 import com.atg.thegoldenbong.dto.atg.GameDto;
 import com.atg.thegoldenbong.dto.atg.HorseDto;
 import com.atg.thegoldenbong.entity.Trender;
+import com.atg.thegoldenbong.service.GameService;
 import com.atg.thegoldenbong.service.TrenderService;
 import com.google.gson.Gson;
 import lombok.extern.log4j.Log4j2;
@@ -16,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.spi.CalendarNameProvider;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -24,12 +26,14 @@ import java.util.stream.IntStream;
 public class TrenderServiceImpl implements TrenderService {
 
     private final TrenderRepository trenderRepository;
+    private final GameService gameService;
     private final RestTemplate restTemplate;
     private final Gson gson;
 
     @Autowired
-    public TrenderServiceImpl(TrenderRepository trenderRepository) {
+    public TrenderServiceImpl(TrenderRepository trenderRepository, GameService gameService) {
         this.trenderRepository = trenderRepository;
+        this.gameService = gameService;
         gson = new Gson();
         restTemplate = new RestTemplate();
     }
@@ -69,7 +73,7 @@ public class TrenderServiceImpl implements TrenderService {
 
     @Override
     public Map<String, List<TrenderDto>> getTrenderSummary(final String gameId, final Optional<Date> afterDate) {
-        final List<Trender> trenderList = trenderRepository.findByGameId(gameId);
+        final List<Trender> trenderList = trenderRepository.findByGameIdOrderByTimeStampDesc(gameId);
 
         Map<String, List<TrenderDto>> trenderDtos = new HashMap<>();
 
@@ -79,7 +83,17 @@ public class TrenderServiceImpl implements TrenderService {
             List<Trender> orderedTrender = new ArrayList<>();
 
             if (afterDate.isPresent()) {
-                orderedTrender.addAll(trenderRepository.findByGameIdAndAndHorseIdAndTimeStampIsAfterOrderByTimeStampAsc(gameId, horseId, afterDate.get()));
+                Date date = afterDate.get();
+
+                // if the race started before afterDate theres no data. so set date to 30 minutes before start
+                if (date.after(trenderList.get(0).getTimeStamp())) {
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(trenderList.get(0).getTimeStamp());
+                    calendar.add(Calendar.MINUTE, -30);
+                    date = calendar.getTime();
+                }
+
+                orderedTrender.addAll(trenderRepository.findByGameIdAndAndHorseIdAndTimeStampIsAfterOrderByTimeStampAsc(gameId, horseId, date));
             } else {
                 orderedTrender.addAll(trenderRepository.findByGameIdAndAndHorseIdOrderByTimeStampAsc(gameId, horseId));
             }
@@ -107,16 +121,24 @@ public class TrenderServiceImpl implements TrenderService {
 
         });
 
+        if (trenderDtos.isEmpty()) {
+            trenderDtos.put("No data within timespan, adjust time so its before the race starts", new ArrayList<>());
+        }
         return trenderDtos;
     }
 
     @Override
-    public Map<String, List<TrenderMultisetDto>> getTrenderMultiset(String gameId) {
-        final List<Trender> trenderList = trenderRepository.findByGameId(gameId);
+    public Map<String, List<TrenderMultisetDto>> getTrenderMultiset(String gameId, Optional<Date> startTime) {
+        final List<Trender> trenderList = trenderRepository.findByGameIdOrderByTimeStampDesc(gameId);
 
         Map<String, List<TrenderMultisetDto>> trenderDtos = new HashMap<>();
 
         Calendar calendar = Calendar.getInstance();
+
+        if (startTime.isPresent()) {
+            calendar.setTime(startTime.get());
+        }
+
         calendar.add(Calendar.HOUR_OF_DAY, -1);
         final Date oneHourAgo = calendar.getTime();
         calendar.add(Calendar.MINUTE, 30);
@@ -166,7 +188,7 @@ public class TrenderServiceImpl implements TrenderService {
     @Override
     public Map<Integer, List<TrenderDto>> getAllHorsesTrender(String gameId, Optional<Date> afterDate) {
         log.log(Level.INFO, "getAllHorsesTrender(" + gameId + ", " + afterDate + ") called for gameId: " + gameId);
-        final List<Trender> trenderList = trenderRepository.findByGameId(gameId);
+        final List<Trender> trenderList = trenderRepository.findByGameIdOrderByTimeStampDesc(gameId);
         Map<Integer, List<TrenderDto>> trenderDtos = new HashMap<>();
 
         Set<Integer> horseIds = trenderList.stream().map(Trender::getHorseId).collect(Collectors.toSet());

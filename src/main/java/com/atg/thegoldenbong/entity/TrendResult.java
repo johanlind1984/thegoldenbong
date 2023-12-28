@@ -4,46 +4,68 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class TrendResult {
 
     @Id
     @GeneratedValue
-    final Integer id;
+    private Integer id;
 
     @Column(name = "game_id")
-    final String gameId;
+    private String gameId;
+
+    @Column(name = "race_id")
+    private String raceId;
+
+    @Column(name = "race_number")
+    private int raceNumber;
 
     @Column(name = "horse_id")
     private int horseId;
 
     @Column(name = "horse_name")
-    final String horseName;
+    private String horseName;
 
     @Column(name = "horse_number")
-    final Integer horseNumber;
+    private Integer horseNumber;
 
-    @Column(name = "vodds")
-    final Long vOdds;
+    @Column(name = "vodds60")
+    private Long vOdds60;
 
-    @Column(name = "vdistribution")
-    final Long distribution;
+    @Column(name = "vodds30")
+    private Long vOdds30;
 
-    @Column(name = "vodds_percentage")
-    final float vOddsPercentage;
+    @Column(name = "vodds15")
+    private Long vOdds15;
 
-    @Column(name = "vdistribution_percentage")
-    final float vDistributionPercentage;
+    @Column(name = "vodds0")
+    private Long vOdds0;
+
+    @Column(name = "vdistribution60")
+    private Long distribution60;
+
+    @Column(name = "vdistribution30")
+    private Long distribution30;
+
+    @Column(name = "vdistribution15")
+    private Long distribution15;
+
+    @Column(name = "vdistribution0")
+    private Long distribution0;
+
+    @Column(name = "placement")
+    private Integer placement;
 
     @Column(name = "timestamp")
     @CreationTimestamp
-    final String timeStamp;
-
-    @Column(name = "placement")
-    final Integer placement;
+    private String timeStamp;
 
 }
