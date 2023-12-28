@@ -14,4 +14,6 @@ public interface TrenderResultRepository extends JpaRepository<TrendResult, Long
     TrendResult findByGameIdAndAndHorseId(final String gameId, final Integer horseId);
     List<TrendResult> findByGameId(final String gameId);
 
+    List<TrendResult> findByGameIdAndRaceId(final String gameId, final String raceId);
+
 }

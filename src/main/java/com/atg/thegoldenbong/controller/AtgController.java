@@ -68,7 +68,7 @@ public class AtgController {
     @GetMapping("/trender/{gameId}/multiset")
     public Map<String, List<TrenderMultisetDto>> getTrenderMultiset(@PathVariable final String gameId) {
         log.log(Level.INFO, "getTrenderMultiset() called for gameId: " + gameId);
-        return trenderService.getTrenderMultiset(gameId);
+        return trenderService.getTrenderMultiset(gameId, Optional.empty());
 
     }
 

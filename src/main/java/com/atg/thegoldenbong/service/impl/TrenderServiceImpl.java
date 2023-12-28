@@ -111,12 +111,17 @@ public class TrenderServiceImpl implements TrenderService {
     }
 
     @Override
-    public Map<String, List<TrenderMultisetDto>> getTrenderMultiset(String gameId) {
+    public Map<String, List<TrenderMultisetDto>> getTrenderMultiset(String gameId, Optional<Date> startTime) {
         final List<Trender> trenderList = trenderRepository.findByGameId(gameId);
 
         Map<String, List<TrenderMultisetDto>> trenderDtos = new HashMap<>();
 
         Calendar calendar = Calendar.getInstance();
+
+        if (startTime.isPresent()) {
+            calendar.setTime(startTime.get());
+        }
+
         calendar.add(Calendar.HOUR_OF_DAY, -1);
         final Date oneHourAgo = calendar.getTime();
         calendar.add(Calendar.MINUTE, 30);
