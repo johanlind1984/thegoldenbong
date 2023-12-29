@@ -1,8 +1,10 @@
 package com.atg.thegoldenbong.service;
 
+import com.atg.thegoldenbong.dto.Enum.ArchiveType;
 import com.atg.thegoldenbong.dto.TrenderDto;
 import com.atg.thegoldenbong.dto.TrenderMultisetDto;
 import com.atg.thegoldenbong.dto.atg.GameDto;
+import com.atg.thegoldenbong.entity.TrendResult;
 import com.atg.thegoldenbong.entity.Trender;
 import org.springframework.stereotype.Service;
 

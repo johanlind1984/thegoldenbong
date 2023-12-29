@@ -1,9 +1,7 @@
 package com.atg.thegoldenbong.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import com.atg.thegoldenbong.dto.Enum.ArchiveType;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -50,19 +48,23 @@ public class TrendResult {
     private Long vOdds0;
 
     @Column(name = "vdistribution60")
-    private Long distribution60;
+    private Long vDistribution60;
 
     @Column(name = "vdistribution30")
-    private Long distribution30;
+    private Long vDistribution30;
 
     @Column(name = "vdistribution15")
-    private Long distribution15;
+    private Long vDistribution15;
 
     @Column(name = "vdistribution0")
-    private Long distribution0;
+    private Long vDistribution0;
 
     @Column(name = "placement")
     private Integer placement;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "archive_type")
+    private ArchiveType archiveType;
 
     @Column(name = "timestamp")
     @CreationTimestamp

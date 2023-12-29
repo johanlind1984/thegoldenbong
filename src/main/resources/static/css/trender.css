@@ -149,3 +149,16 @@ div.tab button.tablinks:hover {
 div.tab button.tablinks.active {
     background-color: darkgray; /* Different background color for the active tab */
 }
+
+.trender-menu-link {
+    font-size: 24px;
+    margin: 15px;
+    color: white; /* Sets the font color to white */
+    transition: font-size 0.3s ease; /* Smooth transition for font-size */
+    text-decoration: none;
+}
+
+.trender-menu-link:hover {
+    font-size: 26px; /* Increases the font size when hovered */
+}
+

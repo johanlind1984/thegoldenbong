@@ -1,7 +1,9 @@
 package com.atg.thegoldenbong.service.impl;
 
+import com.atg.thegoldenbong.dto.Enum.ArchiveType;
 import com.atg.thegoldenbong.dto.TrenderDto;
 import com.atg.thegoldenbong.dto.TrenderMultisetDto;
+import com.atg.thegoldenbong.entity.TrendResult;
 import com.atg.thegoldenbong.repository.TrenderRepository;
 import com.atg.thegoldenbong.dto.atg.GameDto;
 import com.atg.thegoldenbong.dto.atg.HorseDto;
@@ -146,7 +148,7 @@ public class TrenderServiceImpl implements TrenderService {
         calendar.add(Calendar.MINUTE, 15);
         final Date fifteenMinutesAgo = calendar.getTime();
 
-        Set<Integer> horseIds = trenderList.stream().map(Trender::getHorseId).collect(Collectors.toSet());
+        final Set<Integer> horseIds = trenderList.stream().map(Trender::getHorseId).collect(Collectors.toSet());
 
         horseIds.forEach(horseId -> {
             List<Trender> orderedTrender = new ArrayList<>();
