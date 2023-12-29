@@ -1,0 +1,79 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="css/trender.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="javascript/data.js"></script>
+    <script src="javascript/archive/archive.js"></script>
+    <script src="javascript/graph.js"></script>
+    <script src="javascript/game.js"></script>
+    <script src="javascript/tabs.js"></script>
+
+    <script>
+        function reloadData() {
+            reloadArchivedData();
+        }
+    </script>
+</head>
+<body>
+<div class="sticky-menu">
+    <div class="menu-logo">
+        <img src="img/trenderlogoblack.jpg">
+        <a href="/index.html" class="trender-menu-link">Trender</a>
+        <a href="/horse.html" class="trender-menu-link">Horse Graphs</a>
+        <a href="/archive.html" class="trender-menu-link">Archive</a>
+    </div>
+    <div class="menu-text">
+    </div>
+</div>
+<div id="contentContainer">
+    <div id="trendTableContainer">
+        <h2>Archive</h2>
+        <p>
+            This is the archive with old trends saved.
+        </p>
+
+        <div id="gameLinks">
+            <form>
+                <select id="selectGameType">
+                    <option value="ALL_WINNERS" selected="selected">All Winners</option>
+                    <option value="ALL_V75_WINNERS">All V75 Winners</option>
+                    <option value="ALL_V64_WINNERS">All V64 Winners</option>
+                    <option value="ALL_V65_WINNERS">All V65 Winners</option>
+                    <option value="ALL_G75_WINNERS">All GS75 Winners</option>
+                    <option value="ALL_V3_WINNERS">All V3 Winners</option>
+                    <option value="ALL_V4_WINNERS">All V4 Winners</option>
+                    <option value="ALL_V5_WINNERS">All V5 Winners</option>
+                </select>
+                <button type="button" onclick="reloadData()">Update table</button>
+            </form>
+        </div>
+
+        <div id="archive" class="tabcontent">
+            <table id="archiveTable" class="display">
+                <thead style="width: 100%">
+                <tr>
+                    <th>Race</th>
+                    <th>Placement</th>
+                    <th>Horse Number</th>
+                    <th>Horse Name</th>
+                    <th>VDistribution 60</th>
+                    <th>VDistribution 30</th>
+                    <th>VDistribution 15</th>
+                    <th>VDistribution 0</th>
+                    <th>VOdds 60</th>
+                    <th>VOdds 30</th>
+                    <th>VOdds 15</th>
+                    <th>VOdds 0</th>
+                </tr>
+                </thead>
+                <tbody id="archiveTableOutput">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

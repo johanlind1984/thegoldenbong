@@ -61,10 +61,9 @@ public class TrendDataFetchBatchJob {
             final Date startTime = formatter.parse(game.getRaces().get(0).getScheduledStartTime());
             final Date now = new Date();
 
-            if (startTime.after(now)) {
-                log.info("saving trends for " + gameId);
-                trenderService.saveDtoToDomain(game);
-            } else {
+            trenderService.saveDtoToDomain(game);
+
+            if (startTime.before(now)) {
                 saveStatistics(game);
             }
         }

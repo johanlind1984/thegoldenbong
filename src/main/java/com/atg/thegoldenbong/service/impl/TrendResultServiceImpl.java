@@ -1,5 +1,6 @@
 package com.atg.thegoldenbong.service.impl;
 
+import com.atg.thegoldenbong.dto.Enum.ArchiveType;
 import com.atg.thegoldenbong.dto.atg.HorseDto;
 import com.atg.thegoldenbong.entity.TrendResult;
 import com.atg.thegoldenbong.entity.Trender;
@@ -10,10 +11,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @Log4j2
@@ -53,10 +51,24 @@ public class TrendResultServiceImpl implements TrendResultService {
             trendResult.setGameId(gameId);
             trendResult.setRaceId(raceId);
             trendResult.setHorseId(horse);
+            trendResult.setArchiveType(getArchiveType(gameId));
             saveTrendResultForDate(gameId, raceId, horse, startTime, trendResult);
 
             });
 
+    }
+
+    @Override
+    public List<TrendResult> findTrendResultWinnersByArchiveType(ArchiveType archiveType) {
+        return trenderResultRepository.findTrendResultByArchiveTypeAndPlacement(archiveType, 1);
+    }
+
+    private Integer generateHorseId(HorseDto horse) {
+        return Math.abs(horse.getName().hashCode());
+    }
+
+    private ArchiveType getArchiveType(String gameId) {
+        return ArchiveType.ofGameId(gameId);
     }
 
     private void saveTrendResultForDate(String gameId, String raceId, Integer horseId, Date startTime, TrendResult trendResult) {
@@ -103,31 +115,27 @@ public class TrendResultServiceImpl implements TrendResultService {
         // sixty minutes from start
         final long vDistribution60 = trenderList.get(sixtyMinEntry).getVDistribution();
         final long vOdds60 = trenderList.get(sixtyMinEntry).getVOdds();
-        trendResult.setDistribution60(vDistribution60);
+        trendResult.setVDistribution60(vDistribution60);
         trendResult.setVOdds60(vOdds60);
 
         //thirty minutes from start
         final long vDistribution30 = trenderList.get(thirtyMinEntry).getVDistribution();
         final long vOdds30 = trenderList.get(thirtyMinEntry).getVOdds();
-        trendResult.setDistribution30(vDistribution30);
+        trendResult.setVDistribution30(vDistribution30);
         trendResult.setVOdds30(vOdds30);
 
         //fifteen minutes from start
         final long vDistribution15 = trenderList.get(fifteenMinEntry).getVDistribution();
         final long vOdds15 = trenderList.get(fifteenMinEntry).getVOdds();
-        trendResult.setDistribution15(vDistribution15);
+        trendResult.setVDistribution15(vDistribution15);
         trendResult.setVOdds15(vOdds15);
 
         //at start
         final long vDistribution0 = trenderList.get(0).getVDistribution();
         final long vOdds0 = trenderList.get(0).getVOdds();
-        trendResult.setDistribution0(vDistribution0);
+        trendResult.setVDistribution0(vDistribution0);
         trendResult.setVOdds0(vOdds0);
 
         trenderResultRepository.save(trendResult);
-    }
-
-    private Integer generateHorseId(HorseDto horse) {
-        return Math.abs(horse.getName().hashCode());
     }
 }
