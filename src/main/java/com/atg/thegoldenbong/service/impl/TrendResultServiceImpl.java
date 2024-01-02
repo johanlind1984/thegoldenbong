@@ -47,6 +47,7 @@ public class TrendResultServiceImpl implements TrendResultService {
         List<Integer> horseIdList = trenderRepository.findDistinctHorseIdByGameIdAAndRaceIdOrderByTimeStampAsc(gameId, raceId);
 
         horseIdList.forEach(horse -> {
+            log.info(String.format("Saving trendResult for horseId: %s, gameId: %s, raceId: %s, startTime: %s", horse, gameId, raceId, startTime));
             TrendResult trendResult = new TrendResult();
             trendResult.setGameId(gameId);
             trendResult.setRaceId(raceId);
@@ -61,6 +62,42 @@ public class TrendResultServiceImpl implements TrendResultService {
     @Override
     public List<TrendResult> findTrendResultWinnersByArchiveType(ArchiveType archiveType) {
         return trenderResultRepository.findTrendResultByArchiveTypeAndPlacement(archiveType, 1);
+    }
+
+    @Override
+    public List<String> findRacesWithoutResults() {
+        return trenderResultRepository.findDistinctTrendResultRacesWithoutWinners();
+    }
+
+    @Override
+    public List<String> findGameIdByRace(String raceId) {
+        return trenderResultRepository.findGameIdByRace(raceId);
+    }
+
+
+    @Override
+    public List<TrendResult> findTrendResultByHorseNumberAndGameIdAndRaceIdAndPosition(Integer horseNumber, String gameId, String raceId) {
+        return trenderResultRepository.findTrendResultByHorseNumberAndGameIdAndRaceId(horseNumber, gameId, raceId);
+    }
+
+    @Override
+    public List<TrendResult> findTrendResultByHorseNumberAndRaceId(Integer horseNumber, String raceId) {
+        return trenderResultRepository.findTrendResultByHorseNumberAndRaceId(horseNumber, raceId);
+    }
+
+    @Override
+    public boolean haveRaceWinner(String raceId) {
+        return trenderResultRepository.existsByRaceIdAndAndPlacement(raceId, 1);
+    }
+
+    @Override
+    public List<TrendResult> findAllTrendResultWinners() {
+        return trenderResultRepository.findTrendResultByPlacement(1);
+    }
+
+    @Override
+    public void save(TrendResult trendResult) {
+        trenderResultRepository.save(trendResult);
     }
 
     private Integer generateHorseId(HorseDto horse) {
@@ -113,22 +150,34 @@ public class TrendResultServiceImpl implements TrendResultService {
                 .orElse(-1);
 
         // sixty minutes from start
-        final long vDistribution60 = trenderList.get(sixtyMinEntry).getVDistribution();
-        final long vOdds60 = trenderList.get(sixtyMinEntry).getVOdds();
-        trendResult.setVDistribution60(vDistribution60);
-        trendResult.setVOdds60(vOdds60);
+        if (sixtyMinEntry != -1) {
+            final long vDistribution60 = trenderList.get(sixtyMinEntry).getVDistribution();
+            final long vOdds60 = trenderList.get(sixtyMinEntry).getVOdds();
+            trendResult.setVDistribution60(vDistribution60);
+            trendResult.setVOdds60(vOdds60);
+        } else {
+            log.warn(String.format("Could not find trends for 60 mins for horseId: %s, raceId: %s, gameId: %s, startime: %s", horseId, raceId, gameId, startTime));
+        }
 
-        //thirty minutes from start
-        final long vDistribution30 = trenderList.get(thirtyMinEntry).getVDistribution();
-        final long vOdds30 = trenderList.get(thirtyMinEntry).getVOdds();
-        trendResult.setVDistribution30(vDistribution30);
-        trendResult.setVOdds30(vOdds30);
+        if (thirtyMinEntry != -1) {
+            //thirty minutes from start
+            final long vDistribution30 = trenderList.get(thirtyMinEntry).getVDistribution();
+            final long vOdds30 = trenderList.get(thirtyMinEntry).getVOdds();
+            trendResult.setVDistribution30(vDistribution30);
+            trendResult.setVOdds30(vOdds30);
+        } else {
+            log.warn(String.format("Could not find trends for 30 mins for horseId: %s, raceId: %s, gameId: %s, startime: %s", horseId, raceId, gameId, startTime));
+        }
 
-        //fifteen minutes from start
-        final long vDistribution15 = trenderList.get(fifteenMinEntry).getVDistribution();
-        final long vOdds15 = trenderList.get(fifteenMinEntry).getVOdds();
-        trendResult.setVDistribution15(vDistribution15);
-        trendResult.setVOdds15(vOdds15);
+        if (fifteenMinEntry != -1) {
+            //fifteen minutes from start
+            final long vDistribution15 = trenderList.get(fifteenMinEntry).getVDistribution();
+            final long vOdds15 = trenderList.get(fifteenMinEntry).getVOdds();
+            trendResult.setVDistribution15(vDistribution15);
+            trendResult.setVOdds15(vOdds15);
+        } else {
+            log.warn(String.format("Could not find trends for 15 mins for horseId: %s, raceId: %s, gameId: %s, startime: %s", horseId, raceId, gameId, startTime));
+        }
 
         //at start
         final long vDistribution0 = trenderList.get(0).getVDistribution();

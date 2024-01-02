@@ -4,6 +4,7 @@ import com.atg.thegoldenbong.dto.atg.CalendarGamesDto;
 import com.atg.thegoldenbong.dto.atg.GameDto;
 import com.atg.thegoldenbong.dto.atg.RacesDto;
 import com.atg.thegoldenbong.dto.atg.VDto;
+import com.atg.thegoldenbong.entity.TrendResult;
 import com.atg.thegoldenbong.service.GameService;
 import com.atg.thegoldenbong.service.TrendResultService;
 import com.atg.thegoldenbong.service.TrenderService;
@@ -21,9 +22,11 @@ import org.springframework.web.client.RestTemplate;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Log4j2
 @Component
@@ -44,6 +47,7 @@ public class TrendDataFetchBatchJob {
         this.gameService = gameService;
         this.gson = new Gson();
     }
+
     final RestTemplate restTemplate = new RestTemplate();
 
 
@@ -90,17 +94,54 @@ public class TrendDataFetchBatchJob {
         }
     }
 
+    @Scheduled(fixedRate = 120000)
+    public void fetchTrendResultWinners() {
+        log.info("fetching trendResult winners");
+        List<String> raceIdsWithoutWinner = trenderResultService.findRacesWithoutResults();
+
+        raceIdsWithoutWinner.forEach(trendResultWithRaceWinner -> {
+            final List<String> gameIdByRace = trenderResultService.findGameIdByRace(trendResultWithRaceWinner);
+
+            gameIdByRace.forEach(gameId -> {
+                final String uri = BASE_URI + "games/" + gameId;
+                final ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
+                final GameDto game = gson.fromJson(response.getBody(), GameDto.class);
+
+                final List<RacesDto> racesDtos = game.getRaces();
+
+                racesDtos.forEach(racesDto -> {
+
+                    // all races isnt a V game, could for example be DD, LD or TRIO
+                    final Optional<VDto> v = Optional.ofNullable(racesDto.getPools().getV());
+
+                    if (v.isPresent()) {
+                        final List<Integer> winners = v.get().getResult().getWinners();
+
+                        winners.forEach(winner -> {
+                            List<TrendResult> trendResults = trenderResultService.findTrendResultByHorseNumberAndRaceId(winner, racesDto.getId());
+                            trendResults.forEach(trendResult -> {
+                                trendResult.setPlacement(1);
+                                trenderResultService.save(trendResult);
+                            });
+                        });
+                    }
+
+                });
+            });
+        });
+    }
+
     @Transactional
     @Scheduled(fixedRate = 120000)
     public void removeOldTrends() {
         LocalDateTime fourHoursAgo = LocalDateTime.now().minusHours(4);
-        final Date date =  Date.from(fourHoursAgo.atZone(ZoneId.systemDefault()).toInstant());
+        final Date date = Date.from(fourHoursAgo.atZone(ZoneId.systemDefault()).toInstant());
 
         log.log(Level.INFO, "Removing old entries before date: " + date);
         trenderService.deleteTrendsBeforeDate(date);
     }
 
-    public GameDto getGame(final String id)  {
+    public GameDto getGame(final String id) {
         final String uri = BASE_URI + "games/" + id;
         final ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
         final GameDto game = gson.fromJson(response.getBody(), GameDto.class);
