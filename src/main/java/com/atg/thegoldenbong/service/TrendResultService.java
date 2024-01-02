@@ -5,7 +5,6 @@ import com.atg.thegoldenbong.entity.TrendResult;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public interface TrendResultService {
     TrendResult findByGameIdAndAndHorseId(final String gameId, final Integer horseId);
@@ -15,4 +14,19 @@ public interface TrendResultService {
     void saveGameTrendResults(final String gameId, final String raceID, Date startTime);
 
     List<TrendResult> findTrendResultWinnersByArchiveType(ArchiveType archiveType);
+
+    List<String> findRacesWithoutResults();
+
+    List<String> findGameIdByRace(String raceId);
+
+    List<TrendResult> findTrendResultByHorseNumberAndGameIdAndRaceIdAndPosition(Integer horseId, String gameId, String raceId);
+
+    List<TrendResult> findTrendResultByHorseNumberAndRaceId(Integer horseNumber, String raceId);
+
+    boolean haveRaceWinner(String raceId);
+
+    List<TrendResult> findAllTrendResultWinners();
+
+    void save(TrendResult trendResult);
+
 }

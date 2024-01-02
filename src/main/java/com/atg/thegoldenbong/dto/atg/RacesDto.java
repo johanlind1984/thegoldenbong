@@ -52,4 +52,7 @@ public class RacesDto {
 
     @SerializedName("mergedPools")
     private List<MergedPoolsDto> mergedPools;
+
+    @SerializedName("winners")
+    private List<Integer> winners;
 }

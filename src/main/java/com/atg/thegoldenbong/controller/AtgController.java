@@ -88,8 +88,13 @@ public class AtgController {
 
     @GetMapping("/trender/archive/{archiveType}")
     public List<TrendResult> getArchived(@PathVariable final String archiveType) {
+        log.log(Level.INFO, "getArchived(" + archiveType + ") called");
         final ArchiveType type = ArchiveType.valueOf(archiveType);
-        final List<TrendResult> trendResults = trendResultService.findTrendResultWinnersByArchiveType(type);
-        return trendResults;
+
+        if (type == ArchiveType.ALL_WINNERS) {
+            return trendResultService.findAllTrendResultWinners();
+        }
+
+        return trendResultService.findTrendResultWinnersByArchiveType(type);
     }
 }

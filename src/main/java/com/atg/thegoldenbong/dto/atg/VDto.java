@@ -47,4 +47,12 @@ public class VDto {
 
     @SerializedName("races")
     private List<String> races;
+
+    @SerializedName("reserveOrder")
+    private List<String> reserveOrders;
+
+    @SerializedName("result")
+    private ResultDto result;
+
+
 }
