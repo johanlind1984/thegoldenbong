@@ -97,4 +97,12 @@ public class AtgController {
 
         return trendResultService.findTrendResultWinnersByArchiveType(type);
     }
+
+    @GetMapping("/trender/archivestatistics/{archiveType}/{lowVdist}/{highVdist}")
+    public List<String> getArchivedStatistics(@PathVariable final String archiveType, @PathVariable final int lowVdist, @PathVariable final int highVdist) {
+        log.log(Level.INFO, "getArchivedStatistics(" + archiveType + ") called");
+        final ArchiveType type = ArchiveType.valueOf(archiveType);
+
+        return trendResultService.findTrendResultStatisticsWinnersByArchiveType(type, lowVdist, highVdist);
+    }
 }

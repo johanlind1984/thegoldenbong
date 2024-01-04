@@ -56,12 +56,65 @@ public class TrendResultServiceImpl implements TrendResultService {
             saveTrendResultForDate(gameId, raceId, horse, startTime, trendResult);
 
             });
-
     }
 
     @Override
     public List<TrendResult> findTrendResultWinnersByArchiveType(ArchiveType archiveType) {
         return trenderResultRepository.findTrendResultByArchiveTypeAndPlacement(archiveType, 1);
+    }
+
+    @Override
+    public List<String> findTrendResultStatisticsWinnersByArchiveType(ArchiveType archiveType, int lowVist, int highVdist) {
+
+        final List<TrendResult> allWinners = trenderResultRepository
+                .findTrendResultByArchiveTypeAndPlacement(archiveType, 1);
+
+        final List<TrendResult> trendResultWinners = allWinners
+                .stream()
+                .filter(result -> result.getVDistribution0() > lowVist && result.getVDistribution0() < highVdist)
+                .toList();
+
+        int positiveVdist15 = 0;
+        int positiveVdist30 = 0;
+        int positiveVdist60 = 0;
+
+        final List<TrendResult> negativeVOdds = new ArrayList<>();
+
+        for (final TrendResult trendResult : trendResultWinners) {
+            if (trendResult.getVDistribution15() != null && trendResult.getVDistribution30() != null && trendResult.getVDistribution60() != null) {
+                final long vDist0 = trendResult.getVDistribution0();
+                final long vDist15 = trendResult.getVDistribution0() - trendResult.getVDistribution15();
+                final long vDist30 = trendResult.getVDistribution0() - trendResult.getVDistribution30();
+                final long vDist60 = trendResult.getVDistribution0() - trendResult.getVDistribution60();
+
+                if (vDist15 > 0) {
+                    positiveVdist15 += 1L;
+                }
+
+                if (vDist30 > 0) {
+                    positiveVdist30 += 1L;
+                }
+
+                if (vDist60 > 0) {
+                    positiveVdist60 += 1L;
+                }
+            }
+        }
+
+        final double totalResults = trendResultWinners.size();
+        final double winnersPercent = (totalResults / allWinners.size()) * 100;
+        final double winner15percent = (positiveVdist15 / totalResults) * 100;
+        final double winner30percent = (positiveVdist30 / totalResults) * 100;
+        final double winner60percent = (positiveVdist60 / totalResults) * 100;
+
+        final List<String> statistics = new ArrayList<>();
+        statistics.add(archiveType + " between vdist: " + lowVist + " and " + highVdist);
+        statistics.add("The percentage of winners within this vDist is: " + winnersPercent + "%");
+        statistics.add("Positive vDist15: " + winner15percent + "%");
+        statistics.add("Positive vDist30: " + winner30percent + "%");
+        statistics.add("Positive vDist60: " + winner60percent + "%");
+
+        return statistics;
     }
 
     @Override
