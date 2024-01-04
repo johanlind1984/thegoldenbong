@@ -15,6 +15,8 @@ public interface TrendResultService {
 
     List<TrendResult> findTrendResultWinnersByArchiveType(ArchiveType archiveType);
 
+    List<String> findTrendResultStatisticsWinnersByArchiveType(ArchiveType archiveType, int lowVdist, int highVist);
+
     List<String> findRacesWithoutResults();
 
     List<String> findGameIdByRace(String raceId);

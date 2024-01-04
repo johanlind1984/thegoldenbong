@@ -31,9 +31,8 @@
 <div id="contentContainer">
     <div id="trendTableContainer">
         <h2>Archive</h2>
-        <p>
-            This is the archive with old trends saved.
-        </p>
+        <div id="statistics">
+        </div>
 
         <div id="gameLinks">
             <form>
@@ -47,6 +46,8 @@
                     <option value="ALL_V4_WINNERS">All V4 Winners</option>
                     <option value="ALL_V5_WINNERS">All V5 Winners</option>
                 </select>
+                <input type="number" min="0" max="1000" name="lowvdist" id="lowvdist" value="0" class="vdistinput">
+                <input type="number" min="0" max="1000" name="highvdist" id="highvdist" value="10000" class="vdistinput">
                 <button type="button" onclick="reloadData()">Update table</button>
             </form>
         </div>
@@ -59,13 +60,19 @@
                     <th>Placement</th>
                     <th>Horse Number</th>
                     <th>Horse Name</th>
-                    <th>VDistribution 60</th>
-                    <th>VDistribution 30</th>
-                    <th>VDistribution 15</th>
-                    <th>VDistribution 0</th>
+                    <th>VDist 60</th>
+                    <th>VDist 60%</th>
+                    <th>VDist 30</th>
+                    <th>VDist 30%</th>
+                    <th>VDist 15</th>
+                    <th>VDist 15%</th>
+                    <th>VDist 0</th>
                     <th>VOdds 60</th>
+                    <th>VOdds 60%</th>
                     <th>VOdds 30</th>
+                    <th>VOdds 30%</th>
                     <th>VOdds 15</th>
+                    <th>VOdds 15%</th>
                     <th>VOdds 0</th>
                 </tr>
                 </thead>
