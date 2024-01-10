@@ -98,11 +98,45 @@ public class AtgController {
         return trendResultService.findTrendResultWinnersByArchiveType(type);
     }
 
+    @GetMapping("/trender/archive/{archiveType}/{lowVdist}/{highVdist}")
+    public List<TrendResult> getArchived(@PathVariable final String archiveType, @PathVariable final int lowVdist, @PathVariable final int highVdist) {
+        log.log(Level.INFO, "getArchived(" + archiveType + ") called");
+        final ArchiveType type = ArchiveType.valueOf(archiveType);
+
+        if (type == ArchiveType.ALL_WINNERS) {
+            return trendResultService.findTrendResultByPlacementAndVDistribution0Between(1, lowVdist, highVdist);
+        }
+
+        return trendResultService.findTrendResultWinnersByArchiveTypeAndVDistribution0Between(type, lowVdist, highVdist);
+    }
+
     @GetMapping("/trender/archivestatistics/{archiveType}/{lowVdist}/{highVdist}")
     public List<String> getArchivedStatistics(@PathVariable final String archiveType, @PathVariable final int lowVdist, @PathVariable final int highVdist) {
         log.log(Level.INFO, "getArchivedStatistics(" + archiveType + ") called");
         final ArchiveType type = ArchiveType.valueOf(archiveType);
 
         return trendResultService.findTrendResultStatisticsWinnersByArchiveType(type, lowVdist, highVdist);
+    }
+
+    @GetMapping("/trender/archivestatistics/timed/{archiveType}/{lowVdist}/{highVdist}/{startMinutesBeforeStart}/{endMinutesBeforeStart}")
+    public Map<String, List<TrenderDto>> getTimedArchivedStatistics(
+            @PathVariable final String archiveType,
+        @PathVariable final int lowVdist,
+        @PathVariable final int highVdist,
+        @PathVariable final int startMinutesBeforeStart,
+        @PathVariable final int endMinutesBeforeStart) {
+
+        // loop for each game
+
+/*        for ()
+        {
+            final Date timeStamp = new Date(System.currentTimeMillis() - ((3_600L * startMinutesBeforeStart * 1_000) + (60L * endMinutesBeforeStart * 1_000)));
+            log.log(Level.INFO, "getTrenderLastHours(" + timeStamp + ") called for gameId: " + gameId);
+
+        }*/
+
+        //return trenderService.getTrenderSummary(gameId, Optional.of(timeStamp));
+
+        return null;
     }
 }

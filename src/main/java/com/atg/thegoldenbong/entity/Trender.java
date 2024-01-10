@@ -41,6 +41,9 @@ public class Trender {
     @Column(name = "vdistribution")
     private long vDistribution;
 
+    @Column(name = "game_start_time")
+    private Date startTime;
+
     @Column(name = "timestamp")
     @CreationTimestamp
     private Date timeStamp;

@@ -21,7 +21,6 @@ public interface TrenderResultRepository extends JpaRepository<TrendResult, Long
 
     List<TrendResult> findTrendResultByArchiveTypeAndPlacement(ArchiveType archiveType, int placement);
 
-
     @Query("""
             SELECT tr.raceId
             FROM TrendResult tr

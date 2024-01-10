@@ -1,6 +1,7 @@
 package com.atg.thegoldenbong.service.impl;
 
 import com.atg.thegoldenbong.dto.Enum.ArchiveType;
+import com.atg.thegoldenbong.dto.Enum.TrendResultTimeStrategy;
 import com.atg.thegoldenbong.dto.atg.HorseDto;
 import com.atg.thegoldenbong.entity.TrendResult;
 import com.atg.thegoldenbong.entity.Trender;
@@ -20,6 +21,8 @@ public class TrendResultServiceImpl implements TrendResultService {
 
     private TrenderResultRepository trenderResultRepository;
     private TrenderRepository trenderRepository;
+
+    private final int SAVE_TRENDRESULT_MINUTES_BEFORE_START = -5;
 
     @Autowired
     public TrendResultServiceImpl(TrenderResultRepository trenderResultRepository, TrenderRepository trenderRepository) {
@@ -53,8 +56,9 @@ public class TrendResultServiceImpl implements TrendResultService {
             trendResult.setRaceId(raceId);
             trendResult.setHorseId(horse);
             trendResult.setArchiveType(getArchiveType(gameId));
+            // this is the only strategy we use at the moment
+            trendResult.setTrendResultTimeStrategy(TrendResultTimeStrategy.FIVE_MINUTES_BEFORE_START);
             saveTrendResultForDate(gameId, raceId, horse, startTime, trendResult);
-
             });
     }
 
@@ -64,10 +68,31 @@ public class TrendResultServiceImpl implements TrendResultService {
     }
 
     @Override
+    public List<TrendResult> findTrendResultByPlacementAndVDistribution0Between(int placement, int vDistLow, int vDistHigh) {
+        return trenderResultRepository.findTrendResultByPlacement(placement)
+                .stream()
+                .filter(trendResult -> trendResult.getVDistribution0() > vDistLow && trendResult.getVDistribution0() < vDistHigh)
+                .toList();
+    }
+
+    @Override
+    public List<TrendResult> findTrendResultWinnersByArchiveTypeAndVDistribution0Between(ArchiveType archiveType, int vDistLow, int vDistHigh) {
+        return trenderResultRepository.findTrendResultByArchiveTypeAndPlacement(archiveType, 1)
+                .stream()
+                .filter(trendResult -> trendResult.getVDistribution0() > vDistLow && trendResult.getVDistribution0() < vDistHigh)
+                .toList();
+    }
+
+    @Override
     public List<String> findTrendResultStatisticsWinnersByArchiveType(ArchiveType archiveType, int lowVist, int highVdist) {
 
-        final List<TrendResult> allWinners = trenderResultRepository
-                .findTrendResultByArchiveTypeAndPlacement(archiveType, 1);
+        List<TrendResult> allWinners = new ArrayList<>();
+
+        if (archiveType == ArchiveType.ALL_WINNERS) {
+            allWinners = trenderResultRepository.findTrendResultByPlacement(1);
+        } else {
+            allWinners = trenderResultRepository.findTrendResultByArchiveTypeAndPlacement(archiveType, 1);
+        }
 
         final List<TrendResult> trendResultWinners = allWinners
                 .stream()
@@ -77,8 +102,6 @@ public class TrendResultServiceImpl implements TrendResultService {
         int positiveVdist15 = 0;
         int positiveVdist30 = 0;
         int positiveVdist60 = 0;
-
-        final List<TrendResult> negativeVOdds = new ArrayList<>();
 
         for (final TrendResult trendResult : trendResultWinners) {
             if (trendResult.getVDistribution15() != null && trendResult.getVDistribution30() != null && trendResult.getVDistribution60() != null) {
@@ -165,6 +188,9 @@ public class TrendResultServiceImpl implements TrendResultService {
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(startTime);
+
+        calendar.add(Calendar.MINUTE, SAVE_TRENDRESULT_MINUTES_BEFORE_START);
+        final Date beforeMinutesBeforeStart = calendar.getTime();
         calendar.add(Calendar.HOUR_OF_DAY, -1);
         final Date sixtyMinutesBeforeStart = calendar.getTime();
         calendar.add(Calendar.MINUTE, 30);
@@ -191,6 +217,12 @@ public class TrendResultServiceImpl implements TrendResultService {
 
         final int lastEntry = trenderList.size() - 1;
         final int sixtyMinEntry = trenderList.size() -1;
+
+        final int beforeMinEntry = IntStream.range(0, trenderList.size())
+                .filter(i -> trenderList.get(i).getTimeStamp().before(beforeMinutesBeforeStart))
+                .findFirst()
+                .orElse(-1);
+
 
         final int thirtyMinEntry = IntStream.range(0, trenderList.size())
                 .filter(i -> trenderList.get(i).getTimeStamp().before(thirtyMinutesBeforeStart))
@@ -232,11 +264,15 @@ public class TrendResultServiceImpl implements TrendResultService {
             log.warn(String.format("Could not find trends for 15 mins for horseId: %s, raceId: %s, gameId: %s, startime: %s", horseId, raceId, gameId, startTime));
         }
 
-        //at start
-        final long vDistribution0 = trenderList.get(0).getVDistribution();
-        final long vOdds0 = trenderList.get(0).getVOdds();
-        trendResult.setVDistribution0(vDistribution0);
-        trendResult.setVOdds0(vOdds0);
+        if (beforeMinEntry != -1) {
+            //SAVE_TRENDRESULT_MINUTES_BEFORE_START minutes from start
+            final long vDistributionBeforeStart = trenderList.get(beforeMinEntry).getVDistribution();
+            final long vOddsBeforeStart = trenderList.get(beforeMinEntry).getVOdds();
+            trendResult.setVDistribution0(vDistributionBeforeStart);
+            trendResult.setVDistribution0(vOddsBeforeStart);
+        } else {
+            log.warn(String.format("Could not find trends for SAVE_TRENDRESULT_MINUTES_BEFORE_START mins for horseId: %s, raceId: %s, gameId: %s, startime: %s", horseId, raceId, gameId, startTime));
+        }
 
         trenderResultRepository.save(trendResult);
     }
