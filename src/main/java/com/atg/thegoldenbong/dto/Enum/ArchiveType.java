@@ -2,6 +2,8 @@ package com.atg.thegoldenbong.dto.Enum;
 
 public enum ArchiveType {
     ALL_WINNERS,
+
+    ALL_V86_WINNERS,
     ALL_V75_WINNERS,
     ALL_V64_WINNERS,
     ALL_V65_WINNERS,
@@ -11,6 +13,10 @@ public enum ArchiveType {
     ALL_V5_WINNERS;
 
     public static ArchiveType ofGameId(String gameId) {
+        if (gameId.contains("V86")) {
+            return ALL_V86_WINNERS;
+        }
+
         if (gameId.contains("V75")) {
             return ALL_V75_WINNERS;
         }
@@ -39,6 +45,6 @@ public enum ArchiveType {
             return ALL_V5_WINNERS;
         }
 
-        return ALL_V75_WINNERS;
+        return null;
     }
 }

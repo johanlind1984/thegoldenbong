@@ -1,6 +1,7 @@
 package com.atg.thegoldenbong.entity;
 
 import com.atg.thegoldenbong.dto.Enum.ArchiveType;
+import com.atg.thegoldenbong.dto.Enum.TrendResultTimeStrategy;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -65,6 +66,10 @@ public class TrendResult {
     @Enumerated(EnumType.STRING)
     @Column(name = "archive_type")
     private ArchiveType archiveType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "trend_result_time_strategy")
+    private TrendResultTimeStrategy trendResultTimeStrategy;
 
     @Column(name = "timestamp")
     @CreationTimestamp

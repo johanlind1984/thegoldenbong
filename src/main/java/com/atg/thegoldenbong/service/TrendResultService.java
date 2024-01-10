@@ -15,6 +15,10 @@ public interface TrendResultService {
 
     List<TrendResult> findTrendResultWinnersByArchiveType(ArchiveType archiveType);
 
+    List<TrendResult> findTrendResultByPlacementAndVDistribution0Between(int placement, int vDistLow, int vDistHigh);
+
+    List<TrendResult> findTrendResultWinnersByArchiveTypeAndVDistribution0Between(ArchiveType archiveType, int lowVdist, int highVdist);
+
     List<String> findTrendResultStatisticsWinnersByArchiveType(ArchiveType archiveType, int lowVdist, int highVist);
 
     List<String> findRacesWithoutResults();

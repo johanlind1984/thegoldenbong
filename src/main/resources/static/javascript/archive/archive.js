@@ -26,7 +26,7 @@ function reloadArchivedData() {
     dataTable.rows().remove();
     dataTable.page.len(10000);
 
-    fetch('trender/archive/' + gameType)
+    fetch('trender/archive/' + gameType + '/' + vdistLow + '/' + vdistHigh)
         .then(response => response.json())
         .then(data => {
                     // Iterate over each entry in the list of values

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.spi.CalendarNameProvider;
@@ -43,11 +44,17 @@ public class TrenderServiceImpl implements TrenderService {
     @Override
     public void saveDtoToDomain(final GameDto gameDto) {
         gameDto.getRaces().forEach(race -> race.getStarts().forEach(start -> {
+
+
             try {
+                final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                final Date startTime = formatter.parse(race.getScheduledStartTime());
+
                 Trender trender = new Trender();
                 trender.setGameId(gameDto.getId());
                 trender.setRaceId(race.getId());
                 trender.setRaceNumber(race.getNumber());
+                trender.setStartTime(startTime);
 
                 final Optional<HorseDto> horseDto = Optional.ofNullable(start.getHorse());
 
@@ -65,7 +72,11 @@ public class TrenderServiceImpl implements TrenderService {
                     trender.setVDistribution(trenderRepository.findByRaceIdAndAndHorseIdOrderByTimeStampDesc(trender.getRaceId(), horseId).get(0).getVDistribution());
                 }
 
-                trender.setVOdds(start.getPools().getVinnare().getOdds());
+                if (Optional.ofNullable(start.getPools().getVinnare()).isPresent()) {
+                    Optional.ofNullable(start.getPools().getVinnare().getOdds())
+                            .ifPresent(trender::setVOdds);
+                }
+
                 trenderRepository.save(trender);
             } catch (Exception e) {
                 log.error("Error saving trend for race: " + race.getId(), e);
