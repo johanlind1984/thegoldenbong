@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.text.ParseException;
@@ -51,24 +52,26 @@ public class TrendDataFetchBatchJob {
     final RestTemplate restTemplate = new RestTemplate();
 
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 120000)
     public void execute() throws JsonProcessingException, ParseException {
         log.info("executing job " + this.getClass().getName());
         CalendarGamesDto calendarGamesDto = getTodayGames();
 
         for (final VDto vDto : calendarGamesDto.getAllGames()) {
-            final String gameId = vDto.getId();
-            final GameDto game = getGame(gameId);
+            if (vDto != null) {
+                final String gameId = vDto.getId();
+                final GameDto game = getGame(gameId);
 
-            // setup times for start and now, only save new data if the race haven't started yet
-            final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-            final Date startTime = formatter.parse(game.getRaces().get(0).getScheduledStartTime());
-            final Date now = new Date();
+                // setup times for start and now, only save new data if the race haven't started yet
+                final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                final Date startTime = formatter.parse(game.getRaces().get(0).getScheduledStartTime());
+                final Date now = new Date();
 
-            trenderService.saveDtoToDomain(game);
+                trenderService.saveDtoToDomain(game);
 
-            if (startTime.before(now)) {
-                saveStatistics(game);
+                if (startTime.before(now)) {
+                    saveStatistics(game);
+                }
             }
         }
 
@@ -81,7 +84,6 @@ public class TrendDataFetchBatchJob {
         final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         final Date startTime = formatter.parse(game.getRaces().get(0).getScheduledStartTime());
         final Date now = new Date();
-
 
         if (startTime.before(now)) {
             for (final RacesDto racesDto : game.getRaces()) {
@@ -125,28 +127,32 @@ public class TrendDataFetchBatchJob {
                             });
                         });
                     }
-
                 });
             });
         });
     }
 
     @Transactional
-    @Scheduled(fixedRate = 120000)
+    @Scheduled(cron = "0 0 1 * * ?")
     public void removeOldTrends() {
-        LocalDateTime fourHoursAgo = LocalDateTime.now().minusHours(4);
-        final Date date = Date.from(fourHoursAgo.atZone(ZoneId.systemDefault()).toInstant());
-
-        log.log(Level.INFO, "Removing old entries before date: " + date);
-        trenderService.deleteTrendsBeforeDate(date);
+        log.log(Level.INFO, "Removing old trender 2 hours before race start");
+        trenderService.deleteTrendsOlderThanTwoHoursBeforeStart();
     }
 
     public GameDto getGame(final String id) {
         final String uri = BASE_URI + "games/" + id;
-        final ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
-        final GameDto game = gson.fromJson(response.getBody(), GameDto.class);
-        return game;
+
+        try {
+            final ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
+            final GameDto game = gson.fromJson(response.getBody(), GameDto.class);
+            return game;
+        } catch (HttpClientErrorException e) {
+            log.error("Got bad requrest when trying to get game: " + id + " with uri: " + uri);
+        }
+
+        return null;
     }
+
 
     private CalendarGamesDto getTodayGames() throws JsonProcessingException {
         return gameService.getTodayGames();

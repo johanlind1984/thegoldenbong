@@ -11,6 +11,7 @@ public class TrenderMultisetDto {
     final float vDistribution60;
     final float vDistribution30;
     final float vDistribution15;
+    boolean isTrendFlag;
     final String timeStamp;
 
     public TrenderMultisetDto(Integer horseId, String horseName, Integer horseNumber, float vDistribution60, float vDistribution30, float vDistribution15, final String timeStamp) {
@@ -20,6 +21,14 @@ public class TrenderMultisetDto {
         this.vDistribution60 = vDistribution60;
         this.vDistribution30 = vDistribution30;
         this.vDistribution15 = vDistribution15;
+
+        if ((vDistribution15 / vDistribution60) > 0.5 && vDistribution15 > 20) {
+            this.isTrendFlag = true;
+        } else if (vDistribution60 < -50 && vDistribution15 > 0) {
+            this.isTrendFlag = true;
+        } else {
+            this.isTrendFlag = false;
+        }
         this.timeStamp = timeStamp;
 
     }
@@ -31,6 +40,7 @@ public class TrenderMultisetDto {
         this.vDistribution60 = 0;
         this.vDistribution30 = 0;
         this.vDistribution15 = 0;
+        this.isTrendFlag = false;
         this.timeStamp = timeStamp;
 
     }

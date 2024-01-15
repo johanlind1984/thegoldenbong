@@ -83,6 +83,16 @@ function fetchMultisetData() {
                         const vDist60 = entry.vdistribution60;
                         const vDist30 = entry.vdistribution30;
                         const vDist15 = entry.vdistribution15;
+                        const trendFlag = entry.trendFlag;
+                        var trendIcon = '';
+
+                        if (trendFlag) {
+                            trendIcon = '<img src="img/checked.png"  width="25" height="25">';
+                        } else {
+
+                        }
+
+                        console.log(trendIcon);
 
                         dataTable.row.add([
                             key,
@@ -91,6 +101,7 @@ function fetchMultisetData() {
                             vDist60,
                             vDist30,
                             vDist15,
+                            trendIcon,
                             entry.horseNumber
                         ]).draw(true);
                     }

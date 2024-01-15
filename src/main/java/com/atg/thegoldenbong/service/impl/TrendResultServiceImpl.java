@@ -22,22 +22,12 @@ public class TrendResultServiceImpl implements TrendResultService {
     private TrenderResultRepository trenderResultRepository;
     private TrenderRepository trenderRepository;
 
-    private final int SAVE_TRENDRESULT_MINUTES_BEFORE_START = -5;
+    private final int SAVE_TRENDRESULT_MINUTES_START = -5;
 
     @Autowired
     public TrendResultServiceImpl(TrenderResultRepository trenderResultRepository, TrenderRepository trenderRepository) {
         this.trenderResultRepository = trenderResultRepository;
         this.trenderRepository = trenderRepository;
-    }
-
-    @Override
-    public TrendResult findByGameIdAndAndHorseId(String gameId, Integer horseId) {
-        return trenderResultRepository.findByGameIdAndAndHorseId(gameId, horseId);
-    }
-
-    @Override
-    public List<TrendResult> findByGame(String gameId) {
-        return trenderResultRepository.findByGameId(gameId);
     }
 
     @Override
@@ -63,21 +53,21 @@ public class TrendResultServiceImpl implements TrendResultService {
     }
 
     @Override
-    public List<TrendResult> findTrendResultWinnersByArchiveType(ArchiveType archiveType) {
-        return trenderResultRepository.findTrendResultByArchiveTypeAndPlacement(archiveType, 1);
+    public List<TrendResult> findTrendResultWinnersByArchiveTypeAndTrendResultTimeStrategy(ArchiveType archiveType, TrendResultTimeStrategy strategy) {
+        return trenderResultRepository.findTrendResultWinnersByArchiveTypeAndTrendResultTimeStrategy(archiveType, strategy);
     }
 
     @Override
     public List<TrendResult> findTrendResultByPlacementAndVDistribution0Between(int placement, int vDistLow, int vDistHigh) {
-        return trenderResultRepository.findTrendResultByPlacement(placement)
+        return trenderResultRepository.findTrendResultByPlacementAndTrendResultTimeStrategy(1, TrendResultTimeStrategy.FIVE_MINUTES_BEFORE_START)
                 .stream()
                 .filter(trendResult -> trendResult.getVDistribution0() > vDistLow && trendResult.getVDistribution0() < vDistHigh)
                 .toList();
     }
 
     @Override
-    public List<TrendResult> findTrendResultWinnersByArchiveTypeAndVDistribution0Between(ArchiveType archiveType, int vDistLow, int vDistHigh) {
-        return trenderResultRepository.findTrendResultByArchiveTypeAndPlacement(archiveType, 1)
+    public List<TrendResult> findTrendResultWinnersByArchiveTypeTrendResultTimeStrategyAndVDistribution0Between(ArchiveType archiveType, TrendResultTimeStrategy strategy, int vDistLow, int vDistHigh) {
+        return trenderResultRepository.findTrendResultByArchiveTypeAndTrendResultTimeStrategyAndPlacement(archiveType, strategy, 1)
                 .stream()
                 .filter(trendResult -> trendResult.getVDistribution0() > vDistLow && trendResult.getVDistribution0() < vDistHigh)
                 .toList();
@@ -86,12 +76,14 @@ public class TrendResultServiceImpl implements TrendResultService {
     @Override
     public List<String> findTrendResultStatisticsWinnersByArchiveType(ArchiveType archiveType, int lowVist, int highVdist) {
 
+        final TrendResultTimeStrategy trendResultTimeStrategy = TrendResultTimeStrategy.FIVE_MINUTES_BEFORE_START;
+
         List<TrendResult> allWinners = new ArrayList<>();
 
         if (archiveType == ArchiveType.ALL_WINNERS) {
-            allWinners = trenderResultRepository.findTrendResultByPlacement(1);
+            allWinners = trenderResultRepository.findTrendResultByPlacementAndTrendResultTimeStrategy(1, trendResultTimeStrategy);
         } else {
-            allWinners = trenderResultRepository.findTrendResultByArchiveTypeAndPlacement(archiveType, 1);
+            allWinners = trenderResultRepository.findTrendResultByArchiveTypeAndTrendResultTimeStrategyAndPlacement(archiveType, trendResultTimeStrategy, 1);
         }
 
         final List<TrendResult> trendResultWinners = allWinners
@@ -99,16 +91,35 @@ public class TrendResultServiceImpl implements TrendResultService {
                 .filter(result -> result.getVDistribution0() > lowVist && result.getVDistribution0() < highVdist)
                 .toList();
 
-        int positiveVdist15 = 0;
-        int positiveVdist30 = 0;
-        int positiveVdist60 = 0;
+        // flag statistics
+        List<TrendResult> allTrendForArchiveType = trenderResultRepository.findTrendResultByArchiveTypeAndTrendResultTimeStrategy(archiveType, trendResultTimeStrategy)
+                .stream()
+                .filter(result ->
+                        (result.getVDistribution0() > lowVist &&
+                                (result.getVDistribution0() < highVdist)))
+                .toList();
+
+        List<TrendResult> allTrendFlaggedForArchiveType = allTrendForArchiveType
+                .stream()
+                .filter(result ->
+                        result.getVDistribution60() != null &&
+                        (Double.valueOf(result.getVDistribution0() - result.getVDistribution15()) / Double.valueOf((result.getVDistribution0() - result.getVDistribution60())) > 0.5) &&
+                        (result.getVDistribution0() - result.getVDistribution15()) > 20)
+                .toList();
+
+        double allTrendFlaggedForArchiveTypeSize = allTrendFlaggedForArchiveType.size();
+
+        double positiveVdist15 = 0;
+        double positiveVdist30 = 0;
+        double positiveVdist60 = 0;
+        double trendFlagWinners = 0;
 
         for (final TrendResult trendResult : trendResultWinners) {
             if (trendResult.getVDistribution15() != null && trendResult.getVDistribution30() != null && trendResult.getVDistribution60() != null) {
-                final long vDist0 = trendResult.getVDistribution0();
-                final long vDist15 = trendResult.getVDistribution0() - trendResult.getVDistribution15();
-                final long vDist30 = trendResult.getVDistribution0() - trendResult.getVDistribution30();
-                final long vDist60 = trendResult.getVDistribution0() - trendResult.getVDistribution60();
+                final double vDist0 = trendResult.getVDistribution0();
+                final double vDist15 = trendResult.getVDistribution0() - trendResult.getVDistribution15();
+                final double vDist30 = trendResult.getVDistribution0() - trendResult.getVDistribution30();
+                final double vDist60 = trendResult.getVDistribution0() - trendResult.getVDistribution60();
 
                 if (vDist15 > 0) {
                     positiveVdist15 += 1L;
@@ -121,6 +132,12 @@ public class TrendResultServiceImpl implements TrendResultService {
                 if (vDist60 > 0) {
                     positiveVdist60 += 1L;
                 }
+
+                if ((vDist15 / vDist60) > 0.5 && vDist15 > 20) {
+                    trendFlagWinners += 1L;
+                } else if (vDist60 < -50 && vDist15 > 0) {
+                    trendFlagWinners += 1L;
+                }
             }
         }
 
@@ -129,6 +146,8 @@ public class TrendResultServiceImpl implements TrendResultService {
         final double winner15percent = (positiveVdist15 / totalResults) * 100;
         final double winner30percent = (positiveVdist30 / totalResults) * 100;
         final double winner60percent = (positiveVdist60 / totalResults) * 100;
+        final double trendFlagPercent = (trendFlagWinners / totalResults) * 100;
+        final double winchancheWhenTrendFlagPercentage = (trendFlagWinners / allTrendFlaggedForArchiveTypeSize) * 100;
 
         final List<String> statistics = new ArrayList<>();
         statistics.add(archiveType + " between vdist: " + lowVist + " and " + highVdist);
@@ -136,6 +155,8 @@ public class TrendResultServiceImpl implements TrendResultService {
         statistics.add("Positive vDist15: " + winner15percent + "%");
         statistics.add("Positive vDist30: " + winner30percent + "%");
         statistics.add("Positive vDist60: " + winner60percent + "%");
+        statistics.add("trend flag : " + trendFlagPercent + "%");
+        statistics.add("winchance when trendflag: " + winchancheWhenTrendFlagPercentage + "%");
 
         return statistics;
     }
@@ -148,12 +169,6 @@ public class TrendResultServiceImpl implements TrendResultService {
     @Override
     public List<String> findGameIdByRace(String raceId) {
         return trenderResultRepository.findGameIdByRace(raceId);
-    }
-
-
-    @Override
-    public List<TrendResult> findTrendResultByHorseNumberAndGameIdAndRaceIdAndPosition(Integer horseNumber, String gameId, String raceId) {
-        return trenderResultRepository.findTrendResultByHorseNumberAndGameIdAndRaceId(horseNumber, gameId, raceId);
     }
 
     @Override
@@ -189,19 +204,23 @@ public class TrendResultServiceImpl implements TrendResultService {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(startTime);
 
-        calendar.add(Calendar.MINUTE, SAVE_TRENDRESULT_MINUTES_BEFORE_START);
+        calendar.add(Calendar.MINUTE, SAVE_TRENDRESULT_MINUTES_START);
         final Date beforeMinutesBeforeStart = calendar.getTime();
-        calendar.add(Calendar.HOUR_OF_DAY, -1);
+        calendar.add(Calendar.HOUR_OF_DAY, -2); // two hours and five minutes before start
+        final Date lowerDateFetch = calendar.getTime();
+
+
+        calendar.add(Calendar.HOUR_OF_DAY, 1); // one hour and five mintes before start
         final Date sixtyMinutesBeforeStart = calendar.getTime();
-        calendar.add(Calendar.MINUTE, 30);
+        calendar.add(Calendar.MINUTE, 30); // 35 minutes before start
         final Date thirtyMinutesBeforeStart = calendar.getTime();
-        calendar.add(Calendar.MINUTE, 15);
+        calendar.add(Calendar.MINUTE, 15); // 20 min before start
         final Date fifteenMinutesBeforeStart = calendar.getTime();
 
-        List<Trender> trenderList = trenderRepository.findByGameIdAndRaceIdAndHorseIdAndTimeStampBetweenOrderByTimeStampDesc(gameId, raceId, horseId , sixtyMinutesBeforeStart, startTime);
+        List<Trender> trenderList = trenderRepository.findByGameIdAndRaceIdAndHorseIdAndTimeStampBetweenOrderByTimeStampDesc(gameId, raceId, horseId , lowerDateFetch, startTime);
 
         if (trenderList.isEmpty()) {
-            log.info("could not find any trends for raceId: " + raceId + " and horse id: " + horseId + " between starttime: " + startTime + " and " + sixtyMinutesBeforeStart);
+            log.info("could not find any trends for raceId: " + raceId + " and horse id: " + horseId + " between starttime: " + startTime + " and " + lowerDateFetch);
             return;
         } else if (Optional.ofNullable(trenderResultRepository.findByGameIdAndRaceIdAndAndHorseId(gameId, raceId, horseId)).isPresent()) {
             return;
@@ -215,14 +234,15 @@ public class TrendResultServiceImpl implements TrendResultService {
         trendResult.setHorseNumber(firstTrend.getHorseNumber());
         trendResult.setHorseId(firstTrend.getHorseId());
 
-        final int lastEntry = trenderList.size() - 1;
-        final int sixtyMinEntry = trenderList.size() -1;
-
         final int beforeMinEntry = IntStream.range(0, trenderList.size())
                 .filter(i -> trenderList.get(i).getTimeStamp().before(beforeMinutesBeforeStart))
                 .findFirst()
                 .orElse(-1);
 
+        final int sixtyMinEntry = IntStream.range(0, trenderList.size())
+                .filter(i -> trenderList.get(i).getTimeStamp().before(sixtyMinutesBeforeStart))
+                .findFirst()
+                .orElse(-1);
 
         final int thirtyMinEntry = IntStream.range(0, trenderList.size())
                 .filter(i -> trenderList.get(i).getTimeStamp().before(thirtyMinutesBeforeStart))
@@ -265,13 +285,13 @@ public class TrendResultServiceImpl implements TrendResultService {
         }
 
         if (beforeMinEntry != -1) {
-            //SAVE_TRENDRESULT_MINUTES_BEFORE_START minutes from start
+            //SAVE_TRENDRESULT_MINUTES_START minutes from start
             final long vDistributionBeforeStart = trenderList.get(beforeMinEntry).getVDistribution();
             final long vOddsBeforeStart = trenderList.get(beforeMinEntry).getVOdds();
             trendResult.setVDistribution0(vDistributionBeforeStart);
-            trendResult.setVDistribution0(vOddsBeforeStart);
+            trendResult.setVOdds0(vOddsBeforeStart);
         } else {
-            log.warn(String.format("Could not find trends for SAVE_TRENDRESULT_MINUTES_BEFORE_START mins for horseId: %s, raceId: %s, gameId: %s, startime: %s", horseId, raceId, gameId, startTime));
+            log.warn(String.format("Could not find trends for SAVE_TRENDRESULT_MINUTES_START mins for horseId: %s, raceId: %s, gameId: %s, startime: %s", horseId, raceId, gameId, startTime));
         }
 
         trenderResultRepository.save(trendResult);

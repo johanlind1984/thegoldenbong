@@ -1,6 +1,7 @@
 package com.atg.thegoldenbong.controller;
 
 import com.atg.thegoldenbong.dto.Enum.ArchiveType;
+import com.atg.thegoldenbong.dto.Enum.TrendResultTimeStrategy;
 import com.atg.thegoldenbong.dto.TrenderDto;
 import com.atg.thegoldenbong.dto.TrenderMultisetDto;
 import com.atg.thegoldenbong.dto.atg.GameDto;
@@ -19,10 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Log4j2
 @RestController
@@ -47,7 +45,7 @@ public class AtgController {
         final String uri = BASE_URI + "games/" + id;
         final RestTemplate restTemplate = new RestTemplate();
         final ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
-
+        final GameDto gameDto = gson.fromJson(response.getBody(), GameDto.class);
         return gson.fromJson(response.getBody(), GameDto.class);
     }
 
@@ -69,6 +67,19 @@ public class AtgController {
         log.log(Level.INFO, "getTrenderLastHours(" + timeStamp + ") called for gameId: " + gameId);
 
         return trenderService.getTrenderSummary(gameId, Optional.of(timeStamp));
+    }
+
+    @GetMapping("/trender/{gameType}/{hoursBeforeStart}/{minutesBeforeStart}/{hoursEnd}/{minutesEnd}")
+    public Map<String, List<TrenderDto>> getTrenderWithinHoursAndMinutes(
+            @PathVariable final String gameType,
+            @PathVariable final Integer hoursBeforeStart,
+            @PathVariable Integer minutesBeforeStart,
+            @PathVariable final Integer hoursEnd,
+            @PathVariable Integer minutesEnd) {
+
+        final ArchiveType archiveType = ArchiveType.valueOf(gameType);
+
+        return null;
     }
 
     @GetMapping("/trender/{gameId}/multiset")
@@ -95,7 +106,7 @@ public class AtgController {
             return trendResultService.findAllTrendResultWinners();
         }
 
-        return trendResultService.findTrendResultWinnersByArchiveType(type);
+        return trendResultService.findTrendResultWinnersByArchiveTypeAndTrendResultTimeStrategy(type, TrendResultTimeStrategy.FIVE_MINUTES_BEFORE_START);
     }
 
     @GetMapping("/trender/archive/{archiveType}/{lowVdist}/{highVdist}")
@@ -107,7 +118,7 @@ public class AtgController {
             return trendResultService.findTrendResultByPlacementAndVDistribution0Between(1, lowVdist, highVdist);
         }
 
-        return trendResultService.findTrendResultWinnersByArchiveTypeAndVDistribution0Between(type, lowVdist, highVdist);
+        return trendResultService.findTrendResultWinnersByArchiveTypeTrendResultTimeStrategyAndVDistribution0Between(type, TrendResultTimeStrategy.FIVE_MINUTES_BEFORE_START, lowVdist, highVdist);
     }
 
     @GetMapping("/trender/archivestatistics/{archiveType}/{lowVdist}/{highVdist}")

@@ -1,9 +1,7 @@
 package com.atg.thegoldenbong.service.impl;
 
-import com.atg.thegoldenbong.dto.Enum.ArchiveType;
 import com.atg.thegoldenbong.dto.TrenderDto;
 import com.atg.thegoldenbong.dto.TrenderMultisetDto;
-import com.atg.thegoldenbong.entity.TrendResult;
 import com.atg.thegoldenbong.repository.TrenderRepository;
 import com.atg.thegoldenbong.dto.atg.GameDto;
 import com.atg.thegoldenbong.dto.atg.HorseDto;
@@ -17,10 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.spi.CalendarNameProvider;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -42,13 +40,14 @@ public class TrenderServiceImpl implements TrenderService {
     }
 
     @Override
-    public void saveDtoToDomain(final GameDto gameDto) {
+    public void saveDtoToDomain(final GameDto gameDto) throws ParseException {
+        final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        final Date startTime = formatter.parse(gameDto.getRaces().get(0).getScheduledStartTime());
+
         gameDto.getRaces().forEach(race -> race.getStarts().forEach(start -> {
 
 
             try {
-                final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-                final Date startTime = formatter.parse(race.getScheduledStartTime());
 
                 Trender trender = new Trender();
                 trender.setGameId(gameDto.getId());
@@ -68,8 +67,6 @@ public class TrenderServiceImpl implements TrenderService {
 
                 if (Optional.ofNullable(start.getPools().getV()).isPresent()) {
                     trender.setVDistribution(start.getPools().getV().getBetDistribution());
-                } else {
-                    trender.setVDistribution(trenderRepository.findByRaceIdAndAndHorseIdOrderByTimeStampDesc(trender.getRaceId(), horseId).get(0).getVDistribution());
                 }
 
                 if (Optional.ofNullable(start.getPools().getVinnare()).isPresent()) {
@@ -237,6 +234,11 @@ public class TrenderServiceImpl implements TrenderService {
     @Override
     public void deleteTrendsBeforeDate(Date date) {
         trenderRepository.deleteAllByTimeStampBefore(date);
+    }
+
+    @Override
+    public void deleteTrendsOlderThanTwoHoursBeforeStart() {
+        trenderRepository.deleteTrendsOlderThanTwoHoursBeforeStart();
     }
 
     @Override

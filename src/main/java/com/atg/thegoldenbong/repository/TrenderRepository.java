@@ -1,7 +1,10 @@
 package com.atg.thegoldenbong.repository;
 
+import com.atg.thegoldenbong.dto.Enum.ArchiveType;
+import com.atg.thegoldenbong.entity.TrendResult;
 import com.atg.thegoldenbong.entity.Trender;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -33,4 +36,9 @@ public interface TrenderRepository extends JpaRepository<Trender, Long> {
     List<Trender> findByGameIdAndAndHorseNameAndTimeStampIsAfterOrderByTimeStampAsc(final String gameId, final String horseName, final Date date);
 
     void deleteAllByTimeStampBefore(final Date date);
+
+    @Modifying
+    @Query(value = "DELETE FROM trender WHERE timestamp < DATE_SUB(game_start_time, INTERVAL 2 HOUR)", nativeQuery = true)
+    void deleteTrendsOlderThanTwoHoursBeforeStart();
+
 }

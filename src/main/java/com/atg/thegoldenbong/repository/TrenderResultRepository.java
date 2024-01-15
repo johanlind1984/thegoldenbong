@@ -1,6 +1,7 @@
 package com.atg.thegoldenbong.repository;
 
 import com.atg.thegoldenbong.dto.Enum.ArchiveType;
+import com.atg.thegoldenbong.dto.Enum.TrendResultTimeStrategy;
 import com.atg.thegoldenbong.entity.TrendResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,7 +20,9 @@ public interface TrenderResultRepository extends JpaRepository<TrendResult, Long
 
     List<TrendResult> findByGameIdAndRaceId(final String gameId, final String raceId);
 
-    List<TrendResult> findTrendResultByArchiveTypeAndPlacement(ArchiveType archiveType, int placement);
+    List<TrendResult> findTrendResultByArchiveTypeAndTrendResultTimeStrategyAndPlacement(ArchiveType archiveType, TrendResultTimeStrategy strategy, int placement);
+
+    List<TrendResult> findTrendResultWinnersByArchiveTypeAndTrendResultTimeStrategy(ArchiveType archiveType, TrendResultTimeStrategy strategy);
 
     @Query("""
             SELECT tr.raceId
@@ -47,6 +50,13 @@ public interface TrenderResultRepository extends JpaRepository<TrendResult, Long
     boolean existsByRaceIdAndAndPlacement(String raceId, int placement);
 
     List<TrendResult> findTrendResultByPlacement(int placement);
+    List<TrendResult> findTrendResultByPlacementAndTrendResultTimeStrategy(int placement, TrendResultTimeStrategy strategy);
 
+
+    List<TrendResult> findTrendResultByArchiveType(ArchiveType archiveType);
+
+    List<TrendResult> findTrendResultByArchiveTypeAndTrendResultTimeStrategy(ArchiveType archiveType, TrendResultTimeStrategy strategy);
+
+    // findTrendResultByArchiveTypeAndPlacement
 
 }
