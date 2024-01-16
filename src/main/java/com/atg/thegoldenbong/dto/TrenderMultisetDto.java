@@ -24,7 +24,7 @@ public class TrenderMultisetDto {
 
         if ((vDistribution15 / vDistribution60) > 0.5 && vDistribution15 > 20) {
             this.isTrendFlag = true;
-        } else if (vDistribution60 < -50 && vDistribution15 > 0) {
+        } else if (vDistribution60 < -100 && vDistribution15 > 0) {
             this.isTrendFlag = true;
         } else {
             this.isTrendFlag = false;
