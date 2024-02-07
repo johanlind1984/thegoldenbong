@@ -22,7 +22,6 @@ public class TrendResultServiceImpl implements TrendResultService {
 
     private TrenderResultRepository trenderResultRepository;
     private TrenderRepository trenderRepository;
-
     private final int SAVE_TRENDRESULT_MINUTES_START = -5;
 
     @Autowired
@@ -92,28 +91,11 @@ public class TrendResultServiceImpl implements TrendResultService {
                 .filter(result -> result.getVDistribution0() > lowVist && result.getVDistribution0() < highVdist)
                 .toList();
 
-        // flag statistics
-        List<TrendResult> allTrendForArchiveType = trenderResultRepository.findTrendResultByArchiveTypeAndTrendResultTimeStrategy(archiveType, trendResultTimeStrategy)
-                .stream()
-                .filter(result ->
-                        (result.getVDistribution0() > lowVist &&
-                                (result.getVDistribution0() < highVdist)))
-                .toList();
-
-        List<TrendResult> allTrendFlaggedForArchiveType = allTrendForArchiveType
-                .stream()
-                .filter(result ->
-                        TrendFlagUtil.isTrendFlag((result.getVDistribution0() - result.getVDistribution60()),
-                                (result.getVDistribution0() - result.getVDistribution15()),
-                                result.getVDistribution0()))
-                .toList();
-
-        double allTrendFlaggedForArchiveTypeSize = allTrendFlaggedForArchiveType.size();
-
         double positiveVdist15 = 0;
         double positiveVdist30 = 0;
         double positiveVdist60 = 0;
         double trendFlagWinners = 0;
+        double shouldPlayPositive = 0;
 
         for (final TrendResult trendResult : trendResultWinners) {
             if (trendResult.getVDistribution15() != null && trendResult.getVDistribution30() != null && trendResult.getVDistribution60() != null) {
@@ -121,6 +103,7 @@ public class TrendResultServiceImpl implements TrendResultService {
                 final double vDist15Change = trendResult.getVDistribution0() - trendResult.getVDistribution15();
                 final double vDist30Change = trendResult.getVDistribution0() - trendResult.getVDistribution30();
                 final double vDist60Change = trendResult.getVDistribution0() - trendResult.getVDistribution60();
+                final double vOdds0 = trendResult.getVOdds0();
 
                 if (vDist15Change > 0) {
                     positiveVdist15 += 1L;
@@ -138,6 +121,9 @@ public class TrendResultServiceImpl implements TrendResultService {
                     trendFlagWinners += 1L;
                 }
 
+                if ((1 / (vOdds0 / 100)) * 100 > (vDist0 / 100)) {
+                    shouldPlayPositive++;
+                }
             }
         }
 
@@ -147,7 +133,10 @@ public class TrendResultServiceImpl implements TrendResultService {
         final double winner30percent = (positiveVdist30 / totalResults) * 100;
         final double winner60percent = (positiveVdist60 / totalResults) * 100;
         final double trendFlagPercent = (trendFlagWinners / totalResults) * 100;
-        final double winchancheWhenTrendFlagPercentage = (trendFlagWinners / allTrendFlaggedForArchiveTypeSize) * 100;
+        final double winchancheWhenTrendFlagPercentage =
+                (trendFlagWinners / getNumberOfTrendFlags(archiveType, trendResultTimeStrategy, lowVist, highVdist)) * 100;
+        final double shouldplaypositivePercent = (shouldPlayPositive / totalResults) * 100;
+
 
         final List<String> statistics = new ArrayList<>();
         statistics.add(archiveType + " between vdist: " + lowVist + " and " + highVdist);
@@ -157,6 +146,7 @@ public class TrendResultServiceImpl implements TrendResultService {
         statistics.add("Positive vDist60: " + winner60percent + "%");
         statistics.add("% of winners with trendflag: " + trendFlagPercent + "%");
         statistics.add("Chance of winning when trendflag trendflag: " + winchancheWhenTrendFlagPercentage + "%");
+        statistics.add("Should be played positive: " + shouldplaypositivePercent + "%");
 
         return statistics;
     }
@@ -189,10 +179,6 @@ public class TrendResultServiceImpl implements TrendResultService {
     @Override
     public void save(TrendResult trendResult) {
         trenderResultRepository.save(trendResult);
-    }
-
-    private Integer generateHorseId(HorseDto horse) {
-        return Math.abs(horse.getName().hashCode());
     }
 
     private ArchiveType getArchiveType(String gameId) {
@@ -295,5 +281,24 @@ public class TrendResultServiceImpl implements TrendResultService {
         }
 
         trenderResultRepository.save(trendResult);
+    }
+
+    private double getNumberOfTrendFlags(ArchiveType archiveType, TrendResultTimeStrategy trendResultTimeStrategy, int lowVist, int highVdist) {
+        List<TrendResult> allTrendForArchiveType = trenderResultRepository.findTrendResultByArchiveTypeAndTrendResultTimeStrategy(archiveType, trendResultTimeStrategy)
+                .stream()
+                .filter(result ->
+                        (result.getVDistribution0() > lowVist &&
+                                (result.getVDistribution0() < highVdist)))
+                .toList();
+
+        List<TrendResult> allTrendFlaggedForArchiveType = allTrendForArchiveType
+                .stream()
+                .filter(result ->
+                        TrendFlagUtil.isTrendFlag((result.getVDistribution0() - result.getVDistribution60()),
+                                (result.getVDistribution0() - result.getVDistribution15()),
+                                result.getVDistribution0()))
+                .toList();
+
+        return allTrendFlaggedForArchiveType.size();
     }
 }

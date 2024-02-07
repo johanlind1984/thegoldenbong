@@ -1,6 +1,7 @@
 package com.atg.thegoldenbong.service.impl;
 
 import com.atg.thegoldenbong.dto.atg.CalendarGamesDto;
+import com.atg.thegoldenbong.dto.atg.TrackDto;
 import com.atg.thegoldenbong.dto.atg.VDto;
 import com.atg.thegoldenbong.service.GameService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -41,6 +42,15 @@ public class GameServiceImpl implements GameService {
 
         final ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
         final CalendarGamesDto calendarGamesDto = gson.fromJson(response.getBody(), CalendarGamesDto.class);
+
+        // do not return non scandinavian games
+/*        List<TrackDto> scandinavianCalendarGames = calendarGamesDto.getTacks().stream().filter(
+                track -> track.getCountryCode().equals("SE") ||
+                        track.getCountryCode().equals("NO") ||
+                        track.getCountryCode().equals("DK"))
+                .toList();
+        calendarGamesDto.getTacks().clear();
+        calendarGamesDto.getTacks().addAll(scandinavianCalendarGames);*/
 
         return calendarGamesDto;
     }

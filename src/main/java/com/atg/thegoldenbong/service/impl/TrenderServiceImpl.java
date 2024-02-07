@@ -27,16 +27,10 @@ import java.util.stream.IntStream;
 public class TrenderServiceImpl implements TrenderService {
 
     private final TrenderRepository trenderRepository;
-    private final GameService gameService;
-    private final RestTemplate restTemplate;
-    private final Gson gson;
 
     @Autowired
     public TrenderServiceImpl(TrenderRepository trenderRepository, GameService gameService) {
         this.trenderRepository = trenderRepository;
-        this.gameService = gameService;
-        gson = new Gson();
-        restTemplate = new RestTemplate();
     }
 
     @Override
@@ -45,7 +39,6 @@ public class TrenderServiceImpl implements TrenderService {
         final Date startTime = formatter.parse(gameDto.getRaces().get(0).getScheduledStartTime());
 
         gameDto.getRaces().forEach(race -> race.getStarts().forEach(start -> {
-
 
             try {
 
@@ -178,9 +171,11 @@ public class TrenderServiceImpl implements TrenderService {
             final String raceId = orderedTrender.get(0).getRaceId();
             final String horseName = orderedTrender.get(0).getHorseName();
             final int horseNumber = orderedTrender.get(0).getHorseNumber();
-            final long vDistribution60 = orderedTrender.get(lastEntry).getVDistribution() - orderedTrender.get(sixtyMinEntry).getVDistribution();
-            final long vDistribution30 = orderedTrender.get(lastEntry).getVDistribution() - orderedTrender.get(thirtyMinEntry).getVDistribution();
-            final long vDistribution15 = orderedTrender.get(lastEntry).getVDistribution() - orderedTrender.get(fifteenMinEntry).getVDistribution();
+            final long vDistribution0 = orderedTrender.get(lastEntry).getVDistribution();
+            final long vDistribution60Change = vDistribution0 - orderedTrender.get(sixtyMinEntry).getVDistribution();
+            final long vDistribution30Change = vDistribution0 - orderedTrender.get(thirtyMinEntry).getVDistribution();
+            final long vDistribution15Change = vDistribution0 - orderedTrender.get(fifteenMinEntry).getVDistribution();
+            final long vOdds0 = orderedTrender.get(lastEntry).getVOdds();
 
             final String timeStamp = LocalDate.now().toString();
 
@@ -188,7 +183,7 @@ public class TrenderServiceImpl implements TrenderService {
                 trenderDtos.put(raceId, new ArrayList<>());
             }
 
-            trenderDtos.get(raceId).add(new TrenderMultisetDto(horseId, horseName, horseNumber, vDistribution60, vDistribution30, vDistribution15, timeStamp));
+            trenderDtos.get(raceId).add(new TrenderMultisetDto(horseId, horseName, horseNumber, vDistribution60Change, vDistribution30Change, vDistribution15Change,vDistribution0, vOdds0, timeStamp));
 
         });
 
@@ -232,20 +227,16 @@ public class TrenderServiceImpl implements TrenderService {
     }
 
     @Override
-    public void deleteTrendsBeforeDate(Date date) {
-        trenderRepository.deleteAllByTimeStampBefore(date);
+    public void removeYesterDaysTrends() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Date startOfDay = calendar.getTime();
+        log.info("removing trends before " + startOfDay);
+        trenderRepository.deleteAllByTimeStampBefore(startOfDay);
     }
-
-    @Override
-    public void deleteTrendsOlderThanTwoHoursBeforeStart() {
-        trenderRepository.deleteTrendsOlderThanTwoHoursBeforeStart();
-    }
-
-    @Override
-    public List<Trender> findByGameIdAndAndHorseIdAndTimeStampIsAfterOrderByTimeStampAsc(String gameId, Integer horseId, Date afterDate) {
-        return trenderRepository.findByGameIdAndAndHorseIdAndTimeStampIsAfterOrderByTimeStampAsc(gameId,horseId, afterDate);
-    }
-
     private Integer generateHorseId(HorseDto horse) {
         return Math.abs(horse.getName().hashCode());
     }

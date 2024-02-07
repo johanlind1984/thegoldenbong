@@ -35,7 +35,6 @@ public class TrendDataFetchBatchJob {
 
     private final String BASE_URI = "https://www.atg.se/services/racinginfo/v1/api/";
     final TrenderService trenderService;
-
     final TrendResultService trenderResultService;
     final GameService gameService;
     final Gson gson;
@@ -68,7 +67,6 @@ public class TrendDataFetchBatchJob {
                 final Date now = new Date();
 
                 trenderService.saveDtoToDomain(game);
-
                 if (startTime.before(now)) {
                     saveStatistics(game);
                 }
@@ -133,10 +131,10 @@ public class TrendDataFetchBatchJob {
     }
 
     @Transactional
-    @Scheduled(cron = "0 0 1 * * ?")
-    public void removeOldTrends() {
-        log.log(Level.INFO, "Removing old trender 2 hours before race start");
-        trenderService.deleteTrendsOlderThanTwoHoursBeforeStart();
+    @Scheduled(fixedRate = 14400000)
+    public void removeYesterdaysTrends() {
+        log.log(Level.INFO, "Removing yesterdays Trends");
+        trenderService.removeYesterDaysTrends();
     }
 
     public GameDto getGame(final String id) {
@@ -147,7 +145,7 @@ public class TrendDataFetchBatchJob {
             final GameDto game = gson.fromJson(response.getBody(), GameDto.class);
             return game;
         } catch (HttpClientErrorException e) {
-            log.error("Got bad requrest when trying to get game: " + id + " with uri: " + uri);
+            log.error("Got bad request when trying to get game: " + id + " with uri: " + uri);
         }
 
         return null;

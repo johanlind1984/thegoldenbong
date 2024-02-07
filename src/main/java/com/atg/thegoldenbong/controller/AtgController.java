@@ -45,7 +45,6 @@ public class AtgController {
         final String uri = BASE_URI + "games/" + id;
         final RestTemplate restTemplate = new RestTemplate();
         final ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
-        final GameDto gameDto = gson.fromJson(response.getBody(), GameDto.class);
         return gson.fromJson(response.getBody(), GameDto.class);
     }
 

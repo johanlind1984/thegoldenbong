@@ -80,19 +80,24 @@ function fetchMultisetData() {
                     // Iterate over each entry in the list of values
                     for (let i = 0; i < values.length; i++) {
                         let entry = values[i];
-                        const vDist60 = entry.vdistribution60;
-                        const vDist30 = entry.vdistribution30;
-                        const vDist15 = entry.vdistribution15;
+                        console.log(entry);
+                        const vDist60 = entry.vdistribution60Change;
+                        const vDist30 = entry.vdistribution30Change;
+                        const vDist15 = entry.vdistribution15Change;
+                        const vDist0 = entry.vdistribution0;
+                        const shouldBePlayed = entry.shouldBePlayed;
+
                         const trendFlag = entry.trendFlag;
+                        const redFlag = entry.redFlag;
                         var trendIcon = '';
 
                         if (trendFlag) {
-                            trendIcon = '<img src="img/checked.png"  width="25" height="25">';
-                        } else {
-
+                            trendIcon = '<img src="img/checked.png" width="25" height="25">';
+                        } else if (redFlag) {
+                            trendIcon = '<img src="img/redflag.png" width="25" height="25">';
                         }
 
-                        console.log(trendIcon);
+                        console.log('Vdist0: ' + vDist0);
 
                         dataTable.row.add([
                             key,
@@ -101,6 +106,8 @@ function fetchMultisetData() {
                             vDist60,
                             vDist30,
                             vDist15,
+                            vDist0 / 100 + '%',
+                            shouldBePlayed - (vDist0 / 100) + '%',
                             trendIcon,
                             entry.horseNumber
                         ]).draw(true);

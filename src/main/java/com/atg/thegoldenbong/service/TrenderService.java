@@ -23,11 +23,7 @@ public interface TrenderService {
 
     Map<String, List<TrenderMultisetDto>> getTrenderMultiset(String gameId, Optional<Date> startTime);
 
-    void deleteTrendsBeforeDate(final Date date);
-
-    void deleteTrendsOlderThanTwoHoursBeforeStart();
-
-    List<Trender> findByGameIdAndAndHorseIdAndTimeStampIsAfterOrderByTimeStampAsc(final String gameId, final Integer horseId, final Date afterDate);
+    void removeYesterDaysTrends();
 
     Map<Integer, List<TrenderDto>> getAllHorsesTrender(String gameId, Optional<Date> afterDate);
 }
